@@ -25,12 +25,15 @@ const PUSH_SENS_MM_PER_PINCH   = 0.30;
 const PUSH_SENS_MM_PER_WHEEL   = 0.10;
 const WHEEL_ZOOM_EXP_BASE      = 0.998;  // ratio = base^deltaY
 
-export function attachGestures({ canvas, camera, getActiveObject, getMode, viewTransform }) {
+export function attachGestures({
+  canvas, camera, getActiveObject, getMode, viewTransform, onGestureEnd,
+}) {
   const pointers = new Map();   // pointerId → {x,y}
   let lastSingle = null;        // {x,y}
   let lastTwoMid = null;        // {x,y}
   let lastTwoDist = null;       // number
   let mouseRightDrag = false;
+  let wheelIdleTimer = null;
 
   canvas.addEventListener('pointerdown',  onDown);
   canvas.addEventListener('pointermove',  onMove);
@@ -134,6 +137,9 @@ export function attachGestures({ canvas, camera, getActiveObject, getMode, viewT
   function onUp(e) {
     pointers.delete(e.pointerId);
     if (e.pointerType === 'mouse' && e.button === 2) mouseRightDrag = false;
+    // Gesture ends when all pointers lifted. Tell the host to take a
+    // snapshot (undo dedupes if nothing actually changed).
+    if (pointers.size === 0) onGestureEnd?.();
     snapshotState();
   }
 
@@ -151,6 +157,10 @@ export function attachGestures({ canvas, camera, getActiveObject, getMode, viewT
       camera.getWorldDirection(camFwd);
       obj.position.addScaledVector(camFwd, -e.deltaY * PUSH_SENS_MM_PER_WHEEL);
     }
+    // Wheel events stream continuously — debounce the snapshot so one
+    // "session" of scrolling becomes one undo step.
+    clearTimeout(wheelIdleTimer);
+    wheelIdleTimer = setTimeout(() => onGestureEnd?.(), 300);
     e.preventDefault();
   }
 

@@ -11,7 +11,7 @@
 // Bump CACHE_VERSION whenever any precached file changes so old caches get
 // evicted on the next activate.
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `lct-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -24,6 +24,7 @@ const APP_SHELL = [
   './src/mirror.js',
   './src/gestures.js',
   './src/view.js',
+  './src/undo.js',
   './src/exif.js',
   './src/i18n.js',
   './i18n/fr.json',

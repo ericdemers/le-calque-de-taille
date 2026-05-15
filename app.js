@@ -1,6 +1,7 @@
 import { createViewer } from './src/viewer.js';
 import { attachGestures } from './src/gestures.js';
 import { createViewTransform } from './src/view.js';
+import { createUndoStack } from './src/undo.js';
 import { readFovFromFile } from './src/exif.js';
 import * as i18n from './src/i18n.js';
 
@@ -28,6 +29,8 @@ const settingsClose = document.getElementById('settings-close');
 const mirrorRadiusSlider  = document.getElementById('mirror-radius-slider');
 const mirrorRadiusReadout = document.getElementById('mirror-radius-readout');
 
+const btnUndo = document.getElementById('btn-undo');
+
 // 35 mm-equivalent focal length ↔ vertical FOV (degrees).
 // 35 mm frame is 24 mm tall → half-height 12 mm.
 function focaleToFov(mm)   { return 2 * Math.atan(12 / mm) * 180 / Math.PI; }
@@ -36,6 +39,7 @@ function fovToFocale(deg)  { return 12 / Math.tan(deg / 2 * Math.PI / 180); }
 let samples = [];
 let viewer = null;
 let viewTransform = null;
+let undoStack = null;
 let activeMode = 'reference'; // 'reference' | 'mirror' | 'view'
 
 async function init() {
@@ -78,6 +82,16 @@ async function init() {
     if (activeMode === 'mirror')         viewer.mirror.setOpacity(o);
     else if (activeMode === 'reference') viewer.setReferenceOpacity(o);
   });
+  opacitySlider.addEventListener('change', () => takeSnapshot());
+  focaleSlider.addEventListener('change', () => takeSnapshot());
+  mirrorRadiusSlider.addEventListener('change', () => takeSnapshot());
+
+  // Undo button.
+  btnUndo.addEventListener('click', () => {
+    if (!undoStack?.undo()) return;
+    refreshUiFromState();
+    updateUndoButton();
+  });
 
   // Settings sheet (gear icon) — currently holds the mirror-radius slider.
   btnSettings.addEventListener('click', () => openSettingsSheet());
@@ -100,11 +114,16 @@ async function init() {
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
       const mode = btn.dataset.mode;
-      if (mode === 'mirror' && viewer) viewer.mirror.setEnabled(true);
+      let stateChanged = false;
+      if (mode === 'mirror' && viewer && !viewer.mirror.isEnabled()) {
+        viewer.mirror.setEnabled(true);
+        stateChanged = true;
+      }
       activeMode = mode;
       document.querySelectorAll('.seg').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       syncSecondaryBarToMode();
+      if (stateChanged) takeSnapshot();
     });
   });
 
@@ -140,6 +159,10 @@ async function openEditorWithSample(sample) {
   if (!viewer) {
     viewer = createViewer(canvasEl);
     viewTransform = createViewTransform(frameEl);
+    undoStack = createUndoStack({
+      getState: captureState,
+      applyState: applyState,
+    });
     attachGestures({
       canvas: canvasEl,
       camera: viewer.camera,
@@ -150,6 +173,7 @@ async function openEditorWithSample(sample) {
       },
       getMode: () => activeMode,
       viewTransform,
+      onGestureEnd: () => takeSnapshot(),
     });
     window.addEventListener('resize', fitFrameToPhoto);
     photoImg.addEventListener('load', fitFrameToPhoto);
@@ -221,6 +245,10 @@ async function openEditorWithSample(sample) {
   viewer.setFov(focaleToFov(focaleMm), { compensate: false });
   setFocaleDisplay(focaleMm);
   syncSecondaryBarToMode();
+
+  // Fresh undo history per sample — undo doesn't cross sample boundaries.
+  undoStack.reset();
+  takeSnapshot();
 
   welcomeEl.classList.add('hidden');
   editorEl.classList.remove('hidden');
@@ -323,6 +351,67 @@ function openSettingsSheet() {
 }
 function closeSettingsSheet() {
   settingsSheet.classList.add('hidden');
+}
+
+// --- Undo / snapshot plumbing ----------------------------------------------
+
+function takeSnapshot() {
+  undoStack?.snapshot();
+  updateUndoButton();
+}
+
+function updateUndoButton() {
+  btnUndo.disabled = !undoStack?.canUndo();
+}
+
+function captureState() {
+  const r = viewer.referenceGroup;
+  const m = viewer.mirror;
+  return {
+    reference: {
+      pos: r.position.toArray().map(v => +v.toFixed(3)),
+      rot: [r.rotation.x, r.rotation.y, r.rotation.z]
+             .map(v => +v.toFixed(5)),
+    },
+    refOpacity: +viewer.getReferenceOpacity().toFixed(3),
+    mirror: {
+      enabled: m.isEnabled(),
+      radius:  m.getRadius(),
+      opacity: +m.getOpacity().toFixed(3),
+      pos: m.group.position.toArray().map(v => +v.toFixed(3)),
+      rot: [m.group.rotation.x, m.group.rotation.y, m.group.rotation.z]
+             .map(v => +v.toFixed(5)),
+    },
+    focaleMm: parseInt(focaleSlider.value, 10),
+    view: viewTransform.getState(),
+  };
+}
+
+function applyState(s) {
+  // Reference
+  viewer.referenceGroup.position.fromArray(s.reference.pos);
+  viewer.referenceGroup.rotation.set(...s.reference.rot);
+  viewer.setReferenceOpacity(s.refOpacity);
+
+  // Mirror — enabled first so subsequent setRadius / setOpacity see the right state
+  viewer.mirror.setEnabled(s.mirror.enabled);
+  viewer.mirror.setRadius(s.mirror.radius);
+  viewer.mirror.setOpacity(s.mirror.opacity);
+  viewer.mirror.group.position.fromArray(s.mirror.pos);
+  viewer.mirror.group.rotation.set(...s.mirror.rot);
+
+  // Camera (no compensation — we're applying a captured pose, not adjusting)
+  viewer.setFov(focaleToFov(s.focaleMm), { compensate: false });
+  setFocaleDisplay(s.focaleMm);
+
+  // Viewport CSS transform
+  viewTransform.setState(s.view);
+}
+
+function refreshUiFromState() {
+  // Re-sync any UI surfaces that don't auto-derive from state changes
+  // (focale chip + popover are handled by setFocaleDisplay inside applyState).
+  syncSecondaryBarToMode();
 }
 
 init();

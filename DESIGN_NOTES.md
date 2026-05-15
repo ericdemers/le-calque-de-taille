@@ -79,6 +79,27 @@ the V1 experience is settled. A user who already knows about PWAs can
 install via the platform's own mechanism (see §11 below). To re-enable
 the toast: uncomment the call in `app.js`.
 
+### 17. Undo via snapshot stack — gesture-granular, no redo.
+
+V1.7 adds an Undo button in the top bar between the sample selector and
+the focale chip (↶ icon, disabled when there's nothing to undo).
+
+Implementation (`src/undo.js`): on each completed user gesture, capture
+a full state snapshot — reference pose + opacity, mirror pose + opacity
++ radius + enabled, focale, view transform. Pressing Undo pops the
+current snapshot and re-applies the previous one. Snapshots are
+JSON-deduplicated so no-op events don't fill the stack. Max depth 50.
+
+"Completed gesture" means:
+- pointerup at the end of a drag on the canvas
+- 300 ms wheel idle (one scroll burst = one undo step)
+- 'change' event on a slider (release after drag)
+- explicit state changes (e.g. tapping Miroir to enable the mirror)
+
+Stack resets on every sample load — undo does not cross sample
+boundaries. No redo in V1; the stack is a simple array. Add a cursor
+if/when redo is requested.
+
 ### 16. Pattern B controls layout — chip + contextual slider + sheet.
 
 After V1.5's full-width focale slider felt too visually loud at startup,

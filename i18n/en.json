@@ -11,6 +11,7 @@
 
   "control.focale":      "Focal length",
   "control.opacity":     "Opacity",
+  "control.undo":        "Undo",
   "settings.title":      "Settings",
   "settings.mirrorRadius": "Mirror size",
 

@@ -59,6 +59,13 @@ export function createViewTransform(frameEl) {
     return { scale, tx, ty };
   }
 
+  function setState(next) {
+    scale = next.scale;
+    tx = next.tx;
+    ty = next.ty;
+    apply();
+  }
+
   apply();
-  return { panBy, scaleBy, reset, getState };
+  return { panBy, scaleBy, reset, getState, setState };
 }

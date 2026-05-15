@@ -340,6 +340,10 @@ input[type="range"]::-moz-range-thumb {
   min-width: 32px;
   text-align: center;
 }
+.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 .segmented {
   display: inline-flex;
