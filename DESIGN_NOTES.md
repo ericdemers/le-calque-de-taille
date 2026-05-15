@@ -42,8 +42,10 @@ We bundled one photo + STL pair: `samples/front-anterior.jpeg` (an
 iPhone 14 file with full EXIF) and `samples/maxilla_lps.stl`. This is
 enough to verify the app works. Add more samples as you discover what
 each one would teach (a clean front view, a mirror view, a tricky one,
-etc.). The format is `samples/manifest.json`; each entry can declare a
-`fovHint` (a number, or `"from-exif"`, or `null`).
+etc.). The format is `samples/manifest.json`; each entry can declare
+optional `focale` (mm, omit for EXIF default), `startPose` (position +
+rotation_deg), and `mirror` (enabled, position, rotation_deg, radius,
+opacity). See the bundled `front-anterior` entry as a template.
 
 ### 5. No "gold pose" yet.
 
@@ -60,7 +62,7 @@ Miroir's defaults (radius 11 mm, opacity 0.7) come from `src/mirror.js`;
 the per-sample manifest can override via `"mirror": { enabled, radius,
 opacity, position, rotation_deg }`. Capture a good mirror pose with
 `lct.dumpMirrorPose()` after dragging it into place. By convention,
-samples ship with `enabled: false` (progressive disclosure — see §14)
+samples ship with `enabled: false` (progressive disclosure — see §9)
 unless the sample is specifically *about* the mirror feature.
 
 Vue is a CSS transform on `#photo-frame` (`src/view.js`). Pan via
@@ -70,25 +72,27 @@ around the cursor. Scale is clamped to 1.0–8.0. Console helper
 auto-resets on every new sample load — it would almost never be the
 right thing to keep a deep zoom-into-detail across samples.
 
-### 12. The iOS "Add to Home Screen" toast is wired but not shown.
+### 7. The iOS "Add to Home Screen" toast is wired but not shown.
 
 The `maybeShowIosInstallHint()` function exists in `app.js` and the
 French/English strings are in `i18n/*.json`, but the call site is
 commented out. We did not want to push installation on users before
 the V1 experience is settled. A user who already knows about PWAs can
-install via the platform's own mechanism (see §11 below). To re-enable
+install via the platform's own mechanism (see §12 below). To re-enable
 the toast: uncomment the call in `app.js`.
 
-### 17. Undo via snapshot stack — gesture-granular, no redo.
+### 8. Undo via snapshot stack — gesture-granular, no redo.
 
 V1.7 adds an Undo button in the top bar between the sample selector and
-the focale chip (↶ icon, disabled when there's nothing to undo).
+the focale chip (u-turn-left SVG icon, disabled when there's nothing to
+undo).
 
 Implementation (`src/undo.js`): on each completed user gesture, capture
-a full state snapshot — reference pose + opacity, mirror pose + opacity
-+ radius + enabled, focale, view transform. Pressing Undo pops the
-current snapshot and re-applies the previous one. Snapshots are
-JSON-deduplicated so no-op events don't fill the stack. Max depth 50.
+a full state snapshot — active mode, reference pose + opacity, mirror
+pose + opacity + radius + enabled, focale, view transform. Pressing
+Undo pops the current snapshot and re-applies the previous one.
+Snapshots are JSON-deduplicated so no-op events don't fill the stack.
+Max depth 50.
 
 "Completed gesture" means:
 - pointerup at the end of a drag on the canvas
@@ -100,7 +104,7 @@ Stack resets on every sample load — undo does not cross sample
 boundaries. No redo in V1; the stack is a simple array. Add a cursor
 if/when redo is requested.
 
-### 16. Pattern B controls layout — chip + contextual slider + sheet.
+### 9. Pattern B controls layout — chip + contextual slider + sheet.
 
 After V1.5's full-width focale slider felt too visually loud at startup,
 V1.6 reorganises tunable controls along three surfaces:
@@ -123,7 +127,7 @@ adjustments are one drag away (opacity, while you're aligning). Occasional
 adjustments are one tap away (focale, when perspective looks off). Rare
 ones are two taps away (gear → sheet).
 
-### 15. Focale (focal-length) slider with apparent-size compensation.
+### 10. Focale (focal-length) slider with apparent-size compensation.
 
 V1.5 adds a horizontal slider in a secondary bar between the photo and
 the mode controls. Range: 15–120 mm 35mm-equivalent. The slider value is
@@ -146,7 +150,7 @@ Compensation is ON only for user-driven slider changes.
 The previous `fovHint` manifest field is gone; samples either declare
 `focale` (a number, mm) or omit the field to use EXIF.
 
-### 13. Canvas tracks photo aspect ratio, not viewport.
+### 11. Canvas tracks photo aspect ratio, not viewport.
 
 Before V1.3, the Three.js canvas filled the viewport while the photo was
 letterboxed inside it via CSS `max-width / max-height`. This meant a
@@ -167,7 +171,7 @@ They now project slightly differently and may benefit from a one-time
 recapture via `lct.dumpPose()` and `lct.dumpMirrorPose()`. From this
 fix onward, recapture is a one-time, device-independent operation.
 
-### 11. PWA installs from Safari → Share → Sur l'écran d'accueil.
+### 12. PWA installs from Safari → Share → Sur l'écran d'accueil.
 
 V1.2 makes the app installable as a Progressive Web App: `manifest.web
 manifest` declares the icon and standalone display mode; `sw.js`
@@ -185,14 +189,14 @@ fine for V1 but a vector source without built-in rounding would be
 cleaner at higher sizes. A second-pass redesign is in scope for
 the student team.
 
-### 7. Welcome screen shown every launch (V1).
+### 13. Welcome screen shown every launch (V1).
 
 It auto-routes back to welcome on every launch right now. A "remember my
 last sample and skip welcome" toggle is reasonable; we didn't add it
 because we wanted to be sure students see the framing every time until
 the framing is settled.
 
-### 8. HEIC = error / silent ignore (V1).
+### 14. HEIC = error / silent ignore (V1).
 
 The file picker filters to JPEG/PNG. If a user picks a HEIC file from an
 iPhone (the default capture format), nothing happens. This is unhelpful
@@ -207,7 +211,7 @@ Options if you want to fix this:
 We'd lean toward the cheap option until you have real data on how often
 HEIC comes up.
 
-### 9. The 3D reference's default rotation is `(-π/2, 0, 0)`.
+### 15. The 3D reference's default rotation is `(-π/2, 0, 0)`.
 
 Inherited from `align.html`. Works for the maxilla LPS mesh we ship.
 If you swap the reference STL for one in a different coordinate frame
@@ -215,7 +219,7 @@ If you swap the reference STL for one in a different coordinate frame
 loadReferenceSTL` accordingly — or, better, encode the per-STL
 orientation in the sample manifest.
 
-### 10. 16 MB STL is okay for V1.
+### 16. 16 MB STL is okay for V1.
 
 The `maxilla_lps.stl` we ship is 16 MB. That's large but it's a one-time
 cached download. If you find it slow on mobile, look at:
@@ -231,20 +235,20 @@ cached download. If you find it slow on mobile, look at:
 The team has talked about these as obvious extensions. Order is just
 suggestion; pick what you want to ship.
 
-- **Miroir mode** — port the `Reflector` disc + ring from `align.html`,
-  hook the segmented control to it.
-- **Vue mode** — CSS-transform pan/zoom on `#stage`, so pinch zooms the
-  whole composite (photo + canvas + mirror together).
-- **PWA** — manifest + service worker. Should make the app installable
-  on iOS via Share → Add to Home Screen, and work offline after first
-  load.
-- **Pose round-trip** — extend the pose-dump JSON from `align.html` into
-  a "session" format (inputs, alignment, locale, notes) that can be
-  saved, shared, and reopened.
-- **Drag-based FOV widget** — replace the read-only readout in the top
-  bar with a draggable thumb.
-- **More samples** — see §4 above.
+- **More samples** — see §4.
+- **Pose round-trip / session export** — extend `lct.dumpPose()` into a
+  user-tappable feature that exports the full session (inputs,
+  alignment, locale, notes) as JSON, with a corresponding "load
+  session" import. Lets students save their work, share with profs.
+- **HEIC handling** — see §14.
 - **Faculty-authored "ideal alignment" poses** — see §5. Open question.
+- **Per-STL coordinate-frame metadata** in the sample manifest — see
+  §15. Important once you add mandible or single-tooth references.
+- **A second-pass logo** — vector version of `icons/icon.png` without
+  the baked-in rounded corners.
+- **Position presets** for "Use my own photo and STL" mode (Vue de
+  face / occlusale / latérale), since custom photos don't ship with a
+  `startPose`.
 
 ## Where this came from
 
