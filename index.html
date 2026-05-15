@@ -62,7 +62,14 @@
     <button id="btn-back" type="button" aria-label="Retour">←</button>
     <select id="sample-select" aria-label="Exemple"></select>
     <button id="btn-undo" class="icon-btn" type="button"
-            data-i18n-aria="control.undo" aria-label="Annuler" disabled>↶</button>
+            data-i18n-aria="control.undo" aria-label="Annuler" disabled>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 15L3 9l6-6"/>
+        <path d="M3 9h12a6 6 0 0 1 0 12h-3"/>
+      </svg>
+    </button>
     <button id="focale-chip" class="chip" type="button">
       <span class="chip-label" data-i18n="control.focale">Focale</span>
       <span class="chip-value" id="focale-value">— mm</span>
