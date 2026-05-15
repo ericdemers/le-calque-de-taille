@@ -109,21 +109,50 @@ CLAUDE.md                One-line pointer to this file
   `index.html` directly avoids the issue entirely — but you also lose
   any feature that requires `fetch()` of local files.
 
+## Console helpers for development
+
+When the editor is open, `window.lct` exposes a small dev surface used
+to calibrate samples and debug poses. Open Safari Web Inspector (Mac:
+Develop → [iPhone] → page, or Develop → Show JavaScript Console for the
+local browser) and run:
+
+```js
+lct.dumpPose()              // current reference pose as JSON
+lct.dumpMirrorPose()        // current mirror pose + radius + opacity
+lct.setMirrorRadius(8)      // change radius (mm) without UI
+lct.setMirrorOpacity(0.5)   // fade reflection without UI
+lct.resetView()             // restore Vue-mode pan/zoom to identity
+lct.viewer                  // raw three.js viewer (camera, scene, mirror, ...)
+```
+
+**Workflow for capturing a default pose for a new sample:**
+
+1. Open the sample in the editor.
+2. Drag the reference (and mirror, if relevant) to a good initial pose.
+3. In the console, run `lct.dumpPose()` and/or `lct.dumpMirrorPose()`.
+4. Copy the JSON output into `samples/manifest.json` under the sample's
+   `startPose` / `mirror` field.
+
+Per-sample mirror config also supports `radius`, `opacity`, and
+`enabled` (defaults to `false` — only set `true` for samples specifically
+about the mirror feature).
+
 ## When extending the app
 
-See `DESIGN_NOTES.md` for the open decisions and the V1 → V2 roadmap.
-Short version:
+`DESIGN_NOTES.md` is the authoritative reference for the open questions,
+the rationale behind every non-obvious decision, and the V1 → V2 path.
+**Read it before making any non-trivial change** — it explains *why*
+things are the way they are. If you disagree with a decision, update
+the doc when you update the code.
 
-1. **Miroir mode** — port the `Reflector`-based virtual mirror disc from
-   `../prep-grade/scripts/align.html`. The disabled segmented button in
-   the bottom bar is the slot to fill.
-2. **Vue mode** — viewport pan + pinch-zoom of the whole composite
-   (photo + canvas) as a CSS transform on `#stage`.
-3. **PWA** — manifest + service worker so the app installs and works
-   offline. Trivial in scope, high in user value.
-4. **Pose export / import** — round-trip the alignment as JSON so
-   sessions can be saved, shared, and reopened.
-5. **Drag-based FOV widget** — replace the read-only FOV display with a
-   draggable thumb.
+This file (`AGENTS.md`) is the entry point for any new contributor or
+AI assistant. Keep it up to date when you change anything load-bearing:
 
-Always update this file when you change anything load-bearing.
+- Architecture invariants (camera-fixed, object-centric, …)
+- File structure (added, removed, or moved files)
+- Tech stack (new dependency, build step, target platform)
+- Known gotchas (new browser quirk, new SW caveat)
+- Console helper surface (new `lct.*` methods)
+
+Doc rot is the single most likely cause of a future contributor making
+the wrong call. Resist it.
