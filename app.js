@@ -13,6 +13,7 @@ const fovReadout = document.getElementById('fov-readout');
 
 let samples = [];
 let viewer = null;
+let activeMode = 'reference'; // 'reference' | 'mirror'
 
 async function init() {
   await i18n.init();
@@ -28,10 +29,17 @@ async function init() {
     refreshSampleSelect();
   };
 
-  // Mode segmented control — only "reference" is wired in v0.1.
+  // Mode segmented control.
+  // "Référence" = gestures move the 3D reference.
+  // "Miroir"    = gestures move the virtual mirror disc; first tap also
+  //              lazily enables the mirror so it appears in the scene.
+  // "Vue"       = pinch-zoom the whole composite (not yet wired).
   document.querySelectorAll('.seg').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
+      const mode = btn.dataset.mode;
+      if (mode === 'mirror' && viewer) viewer.mirror.setEnabled(true);
+      activeMode = mode;
       document.querySelectorAll('.seg').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
@@ -71,14 +79,19 @@ async function openEditorWithSample(sample) {
     attachGestures({
       canvas: canvasEl,
       camera: viewer.camera,
-      getActiveObject: () => viewer.referenceGroup,
+      getActiveObject: () =>
+        activeMode === 'mirror' ? viewer.mirror.group : viewer.referenceGroup,
     });
     window.addEventListener('resize',
       () => viewer.resize(stageEl.clientWidth, stageEl.clientHeight));
 
-    // Dev hook: from the JS console, `lct.dumpPose()` returns the current
-    // alignment as a JSON-ready object. Used to capture good default
-    // poses for entries in samples/manifest.json (the `startPose` field).
+    // Dev hooks for the JS console. Used to capture good defaults for the
+    // sample manifest and to dial radius/opacity on a phone before we
+    // build proper UI sliders.
+    //   lct.dumpPose()         → reference pose JSON
+    //   lct.dumpMirrorPose()   → mirror pose + radius + opacity JSON
+    //   lct.setMirrorRadius(8) → change radius (mm)
+    //   lct.setMirrorOpacity(0.6)  → change reflection opacity
     window.lct = {
       viewer,
       dumpPose() {
@@ -90,6 +103,9 @@ async function openEditorWithSample(sample) {
             .map(v => +(v * 180 / Math.PI).toFixed(1)),
         };
       },
+      dumpMirrorPose: () => viewer.mirror.dumpPose(),
+      setMirrorRadius:  (mm)  => viewer.mirror.setRadius(mm),
+      setMirrorOpacity: (v01) => viewer.mirror.setOpacity(v01),
     };
   }
 
@@ -102,6 +118,21 @@ async function openEditorWithSample(sample) {
 
   photoImg.src = sample.photo;
   await viewer.loadReferenceSTL(sample.reference, { startPose: sample.startPose });
+
+  // Per-sample mirror config. Absent → mirror stays off until the user taps
+  // Miroir in the segmented control.
+  if (sample.mirror) {
+    if (typeof sample.mirror.radius === 'number') {
+      viewer.mirror.setRadius(sample.mirror.radius);
+    }
+    viewer.mirror.applyPose(sample.mirror);
+    if (typeof sample.mirror.opacity === 'number') {
+      viewer.mirror.setOpacity(sample.mirror.opacity);
+    }
+    viewer.mirror.setEnabled(sample.mirror.enabled !== false);
+  } else {
+    viewer.mirror.setEnabled(false);
+  }
 
   // FOV resolution order: EXIF > manifest.fovHint > 50°.
   let fov = 50;

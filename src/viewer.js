@@ -11,6 +11,7 @@
 
 import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { createMirror } from './mirror.js';
 
 const CAMERA_DIST = 150;   // mm — fixed camera-to-origin distance
 
@@ -35,6 +36,8 @@ export function createViewer(canvas) {
 
   const referenceGroup = new THREE.Group();
   scene.add(referenceGroup);
+
+  const mirror = createMirror(scene);
 
   const refMaterial = new THREE.MeshStandardMaterial({
     color: 0xddddee, metalness: 0, roughness: 0.85,
@@ -120,7 +123,7 @@ export function createViewer(canvas) {
   })();
 
   return {
-    camera, scene, referenceGroup,
+    camera, scene, referenceGroup, mirror,
     loadReferenceSTL, setFov, setReferenceOpacity, resetReference, resize,
   };
 }

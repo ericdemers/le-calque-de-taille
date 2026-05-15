@@ -52,13 +52,20 @@ Once you've tried aligning the bundled sample many times, decide whether
 saving and replaying a reference pose helps learning or short-circuits
 it. Both positions are defensible.
 
-### 6. Miroir and Vue are disabled in the bottom-bar segmented control.
+### 6. Vue is still disabled in the bottom-bar segmented control.
 
-They are visible-but-disabled so the eventual shape of the UI is clear.
-Miroir is the higher-priority of the two — the virtual mirror disc is
-genuinely useful pedagogically and the implementation is largely a port
-from `../prep-grade/scripts/align.html`. Vue (pinch-zoom on the entire
-composite) is simpler and lower-stakes; do whichever you feel like first.
+Miroir is now wired (V1.1). Vue — pinch-zoom on the whole composite
+(photo + canvas + mirror) — remains disabled and is the next obvious
+piece. It's a CSS-transform on `#stage` plus minor gesture routing,
+much smaller in scope than Miroir was.
+
+Miroir's V1.1 ships with hardcoded defaults (radius 8 mm, opacity 1.0,
+position from align.html). Console helpers `lct.setMirrorRadius()` and
+`lct.setMirrorOpacity()` let you dial values from a phone for testing
+before committing to a UI control. Per-sample mirror config can be
+declared in `samples/manifest.json` as `"mirror": { enabled, radius,
+opacity, position, rotation_deg }`. Capture a good mirror pose with
+`lct.dumpMirrorPose()` after dragging it into place.
 
 ### 7. Welcome screen shown every launch (V1).
 
