@@ -219,14 +219,32 @@ If you swap the reference STL for one in a different coordinate frame
 loadReferenceSTL` accordingly — or, better, encode the per-STL
 orientation in the sample manifest.
 
-### 16. 16 MB STL is okay for V1.
+### 16. STLs are decimated to ~15K faces; both maxilla + mandible ship.
 
-The `maxilla_lps.stl` we ship is 16 MB. That's large but it's a one-time
-cached download. If you find it slow on mobile, look at:
-- Compressing to DRACO-encoded glTF (~10× smaller).
-- Reducing the mesh density (the original is at scanner resolution; we
-  don't need that for visualization).
-- Splitting into per-quadrant meshes.
+The bundled STLs are produced by `scripts/prepare_samples.py` (gitignored,
+keeps tooling out of the repo). The script bakes the prep-grade LPS
+transform into the raw scanner mesh and decimates with `pymeshlab`'s
+quadric-edge-collapse algorithm:
+
+- `samples/maxilla_lps.stl` — was 16 MB at scanner resolution; now ~730 KB
+  at 15 K faces. Visually indistinguishable at app rendering scale.
+- `samples/mandible_lps.stl` — new in V1.8. Baked from the dentoforme-1
+  lower-jaw scan + `dentoforme1_mandible.npz` (the prep-grade alignment).
+  Same 15 K faces, same ~730 KB.
+
+Both jaws are in the same LPS frame: +X = patient's left, +Y = posterior,
++Z = superior. They meet at z = 0 (occlusal contact plane) so they could
+be displayed together in the same scene without further alignment.
+
+The bundled sample only references the maxilla today; a future student-
+team task is to add a mandible-based sample (mandibular prep photo +
+calibrated `startPose`), or extend the manifest schema so one sample can
+declare multiple references and let the user switch between them.
+
+If you ever need to re-bake (e.g. swap to a different dentoforme,
+different transform, finer decimation), recreate the local
+`scripts/.venv` (`python3 -m venv scripts/.venv && scripts/.venv/bin/pip
+install pymeshlab trimesh numpy`), then run `scripts/prepare_samples.py`.
 
 ---
 

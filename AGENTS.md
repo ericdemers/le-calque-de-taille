@@ -68,7 +68,8 @@ icons/
 samples/
   manifest.json          List of bundled examples
   front-anterior.jpeg    iPhone 14 photo with full EXIF (demo for auto-FOV)
-  maxilla_lps.stl        Maxilla reference mesh in LPS frame
+  maxilla_lps.stl        Maxilla reference mesh in LPS frame (~730 KB)
+  mandible_lps.stl       Mandible reference mesh in same LPS frame (~730 KB)
 DESIGN_NOTES.md          Decisions made in V1, flagged as arguable
 README.md                Public-facing introduction
 CLAUDE.md                One-line pointer to this file
