@@ -2,6 +2,8 @@
 
 > *Comparer, améliorer.*
 
+**Live demo:** <https://ericdemers.github.io/le-calque-de-taille/>
+
 A mobile-first, open-source web app for dental students. Overlay a 3D
 reference mesh onto a dental photo you took with a phone, manipulate
 the reference with touch gestures until it matches what you see, and
