@@ -8,6 +8,7 @@ const editorEl  = document.getElementById('editor');
 const photoImg  = document.getElementById('photo-img');
 const canvasEl  = document.getElementById('three-canvas');
 const stageEl   = document.getElementById('stage');
+const frameEl   = document.getElementById('photo-frame');
 const sampleSel = document.getElementById('sample-select');
 const fovReadout = document.getElementById('fov-readout');
 
@@ -82,8 +83,8 @@ async function openEditorWithSample(sample) {
       getActiveObject: () =>
         activeMode === 'mirror' ? viewer.mirror.group : viewer.referenceGroup,
     });
-    window.addEventListener('resize',
-      () => viewer.resize(stageEl.clientWidth, stageEl.clientHeight));
+    window.addEventListener('resize', fitFrameToPhoto);
+    photoImg.addEventListener('load', fitFrameToPhoto);
 
     // Dev hooks for the JS console. Used to capture good defaults for the
     // sample manifest and to dial radius/opacity on a phone before we
@@ -148,8 +149,34 @@ async function openEditorWithSample(sample) {
   welcomeEl.classList.add('hidden');
   editorEl.classList.remove('hidden');
   // clientWidth is 0 while #editor is hidden; size after the next frame.
-  requestAnimationFrame(
-    () => viewer.resize(stageEl.clientWidth, stageEl.clientHeight));
+  requestAnimationFrame(fitFrameToPhoto);
+}
+
+// Size #photo-frame to match the photo's aspect ratio, centered inside
+// #stage with letterbox bars in the leftover space. The 3D canvas fills
+// the frame, so the camera's aspect ratio is the PHOTO's aspect ratio —
+// not the viewport's. This makes captured poses device-invariant.
+function fitFrameToPhoto() {
+  if (!viewer || !photoImg.naturalWidth) return;
+  const photoAr  = photoImg.naturalWidth / photoImg.naturalHeight;
+  const stageW   = stageEl.clientWidth;
+  const stageH   = stageEl.clientHeight;
+  if (!stageW || !stageH) return;
+  const stageAr  = stageW / stageH;
+
+  let frameW, frameH;
+  if (photoAr > stageAr) {
+    // Photo is wider than the viewport — fit to width.
+    frameW = stageW;
+    frameH = stageW / photoAr;
+  } else {
+    // Photo is taller — fit to height.
+    frameH = stageH;
+    frameW = stageH * photoAr;
+  }
+  frameEl.style.width  = frameW + 'px';
+  frameEl.style.height = frameH + 'px';
+  viewer.resize(frameW, frameH);
 }
 
 function pickOwnPhoto() {

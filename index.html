@@ -49,8 +49,13 @@
 
 <section id="editor" class="screen hidden">
   <div id="stage">
-    <img id="photo-img" alt="">
-    <canvas id="three-canvas"></canvas>
+    <!-- photo-frame: sized to match the photo's aspect ratio so the canvas
+         overlays the photo exactly. Mesh and mirror poses then become
+         device-invariant. See DESIGN_NOTES.md §13. -->
+    <div id="photo-frame">
+      <img id="photo-img" alt="">
+      <canvas id="three-canvas"></canvas>
+    </div>
   </div>
 
   <header id="top-bar" class="chrome">

@@ -76,6 +76,27 @@ the V1 experience is settled. A user who already knows about PWAs can
 install via the platform's own mechanism (see §11 below). To re-enable
 the toast: uncomment the call in `app.js`.
 
+### 13. Canvas tracks photo aspect ratio, not viewport.
+
+Before V1.3, the Three.js canvas filled the viewport while the photo was
+letterboxed inside it via CSS `max-width / max-height`. This meant a
+captured mesh or mirror pose was tied to a specific viewport aspect
+ratio — alignments tuned on a Mac browser window appeared at a different
+scale on iPhone portrait, and vice versa.
+
+Fix: `index.html` now wraps the photo + canvas in a `#photo-frame` div
+sized by JS to the photo's intrinsic aspect ratio. The canvas fills the
+frame exactly, so the Three.js camera's aspect ratio is the photo's
+aspect ratio. Poses captured on any device project the same way on every
+device. Letterbox bars (dark, matches the theme background) fill the
+leftover viewport space.
+
+Existing captured poses (the front-anterior sample's `startPose` for
+the reference, plus any mirror pose) were captured under the old math.
+They now project slightly differently and may benefit from a one-time
+recapture via `lct.dumpPose()` and `lct.dumpMirrorPose()`. From this
+fix onward, recapture is a one-time, device-independent operation.
+
 ### 11. PWA installs from Safari → Share → Sur l'écran d'accueil.
 
 V1.2 makes the app installable as a Progressive Web App: `manifest.web
