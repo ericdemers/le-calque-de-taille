@@ -11,8 +11,22 @@ const canvasEl  = document.getElementById('three-canvas');
 const stageEl   = document.getElementById('stage');
 const frameEl   = document.getElementById('photo-frame');
 const sampleSel = document.getElementById('sample-select');
+
+const secondaryBarEl = document.getElementById('secondary-bar');
+const opacitySlider  = document.getElementById('opacity-slider');
+const opacityReadout = document.getElementById('opacity-readout');
+
+const focaleChip    = document.getElementById('focale-chip');
+const focaleValueEl = document.getElementById('focale-value');
+const focalePopover = document.getElementById('focale-popover');
 const focaleSlider  = document.getElementById('focale-slider');
 const focaleReadout = document.getElementById('focale-readout');
+
+const btnSettings   = document.getElementById('btn-settings');
+const settingsSheet = document.getElementById('settings-sheet');
+const settingsClose = document.getElementById('settings-close');
+const mirrorRadiusSlider  = document.getElementById('mirror-radius-slider');
+const mirrorRadiusReadout = document.getElementById('mirror-radius-readout');
 
 // 35 mm-equivalent focal length ↔ vertical FOV (degrees).
 // 35 mm frame is 24 mm tall → half-height 12 mm.
@@ -38,12 +52,43 @@ async function init() {
     refreshSampleSelect();
   };
 
-  // Focale slider — live-updates camera FOV with apparent-size compensation,
-  // so only perspective foreshortening changes (not scale) as the user drags.
+  // Focale chip → toggle popover. Slider inside updates camera FOV with
+  // apparent-size compensation so only perspective changes.
+  focaleChip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    focalePopover.classList.toggle('hidden');
+  });
+  focalePopover.addEventListener('click', (e) => e.stopPropagation());
   focaleSlider.addEventListener('input', () => {
     const mm = parseInt(focaleSlider.value, 10);
-    focaleReadout.textContent = `${mm} mm`;
+    setFocaleDisplay(mm);
     if (viewer) viewer.setFov(focaleToFov(mm), { compensate: true });
+  });
+  // Click anywhere outside the popover dismisses it.
+  document.addEventListener('click', () => {
+    focalePopover.classList.add('hidden');
+  });
+
+  // Opacity slider — controls the ACTIVE MODE's object opacity.
+  opacitySlider.addEventListener('input', () => {
+    const pct = parseInt(opacitySlider.value, 10);
+    opacityReadout.textContent = `${pct} %`;
+    if (!viewer) return;
+    const o = pct / 100;
+    if (activeMode === 'mirror')         viewer.mirror.setOpacity(o);
+    else if (activeMode === 'reference') viewer.setReferenceOpacity(o);
+  });
+
+  // Settings sheet (gear icon) — currently holds the mirror-radius slider.
+  btnSettings.addEventListener('click', () => openSettingsSheet());
+  settingsClose.addEventListener('click', () => closeSettingsSheet());
+  settingsSheet.addEventListener('click', (e) => {
+    if (e.target === settingsSheet) closeSettingsSheet();
+  });
+  mirrorRadiusSlider.addEventListener('input', () => {
+    const mm = parseInt(mirrorRadiusSlider.value, 10);
+    mirrorRadiusReadout.textContent = `${mm} mm`;
+    if (viewer) viewer.mirror.setRadius(mm);
   });
 
   // Mode segmented control.
@@ -59,6 +104,7 @@ async function init() {
       activeMode = mode;
       document.querySelectorAll('.seg').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      syncSecondaryBarToMode();
     });
   });
 
@@ -173,8 +219,8 @@ async function openEditorWithSample(sample) {
   else if (exif?.focaleMm)               focaleMm = exif.focaleMm;
   focaleMm = Math.round(focaleMm);
   viewer.setFov(focaleToFov(focaleMm), { compensate: false });
-  focaleSlider.value = focaleMm;
-  focaleReadout.textContent = `${focaleMm} mm`;
+  setFocaleDisplay(focaleMm);
+  syncSecondaryBarToMode();
 
   welcomeEl.classList.add('hidden');
   editorEl.classList.remove('hidden');
@@ -242,6 +288,41 @@ function pickOwnPhoto() {
 function backToWelcome() {
   editorEl.classList.add('hidden');
   welcomeEl.classList.remove('hidden');
+}
+
+// Show the right slider in the secondary bar for the active mode.
+// View mode → hide the bar entirely (gestures handle zoom; no slider needed).
+function syncSecondaryBarToMode() {
+  if (!viewer) return;
+  if (activeMode === 'view') {
+    secondaryBarEl.classList.add('mode-hidden');
+    return;
+  }
+  secondaryBarEl.classList.remove('mode-hidden');
+  const o = (activeMode === 'mirror')
+    ? viewer.mirror.getOpacity()
+    : viewer.getReferenceOpacity();
+  const pct = Math.round(o * 100);
+  opacitySlider.value = pct;
+  opacityReadout.textContent = `${pct} %`;
+}
+
+function setFocaleDisplay(mm) {
+  focaleSlider.value = mm;
+  focaleReadout.textContent = `${mm} mm`;
+  focaleValueEl.textContent = `${mm} mm`;
+}
+
+function openSettingsSheet() {
+  if (!viewer) return;
+  // Reflect current values when opening.
+  const r = viewer.mirror.getRadius();
+  mirrorRadiusSlider.value = r;
+  mirrorRadiusReadout.textContent = `${r} mm`;
+  settingsSheet.classList.remove('hidden');
+}
+function closeSettingsSheet() {
+  settingsSheet.classList.add('hidden');
 }
 
 init();

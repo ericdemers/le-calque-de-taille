@@ -9,7 +9,10 @@
   "mode.mirror":    "Mirror",
   "mode.view":      "View",
 
-  "control.focale": "Focal length",
+  "control.focale":      "Focal length",
+  "control.opacity":     "Opacity",
+  "settings.title":      "Settings",
+  "settings.mirrorRadius": "Mirror size",
 
   "ios.installHint": "Install this app: Share → Add to Home Screen"
 }

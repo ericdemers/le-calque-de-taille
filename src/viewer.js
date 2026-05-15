@@ -130,6 +130,10 @@ export function createViewer(canvas) {
     refMaterial.transparent = value01 < 1.0;
   }
 
+  function getReferenceOpacity() {
+    return refMaterial.opacity;
+  }
+
   function resetReference() {
     referenceGroup.position.copy(referenceInitial.pos);
     referenceGroup.rotation.copy(referenceInitial.rot);
@@ -150,6 +154,8 @@ export function createViewer(canvas) {
 
   return {
     camera, scene, referenceGroup, mirror,
-    loadReferenceSTL, setFov, setReferenceOpacity, resetReference, resize,
+    loadReferenceSTL, setFov,
+    setReferenceOpacity, getReferenceOpacity,
+    resetReference, resize,
   };
 }

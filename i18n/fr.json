@@ -9,7 +9,10 @@
   "mode.mirror":    "Miroir",
   "mode.view":      "Vue",
 
-  "control.focale": "Focale",
+  "control.focale":      "Focale",
+  "control.opacity":     "Opacité",
+  "settings.title":      "Réglages",
+  "settings.mirrorRadius": "Taille du miroir",
 
   "ios.installHint": "Installer l'appli : Partager → Sur l'écran d'accueil"
 }

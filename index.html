@@ -61,12 +61,46 @@
   <header id="top-bar" class="chrome">
     <button id="btn-back" type="button" aria-label="Retour">←</button>
     <select id="sample-select" aria-label="Exemple"></select>
+    <button id="focale-chip" class="chip" type="button">
+      <span class="chip-label" data-i18n="control.focale">Focale</span>
+      <span class="chip-value" id="focale-value">— mm</span>
+    </button>
+    <button id="btn-settings" class="icon-btn" type="button"
+            aria-label="Réglages">⚙</button>
   </header>
 
   <div id="secondary-bar" class="chrome">
-    <label for="focale-slider" data-i18n="control.focale">Focale</label>
+    <label for="opacity-slider" data-i18n="control.opacity">Opacité</label>
+    <input type="range" id="opacity-slider" min="0" max="100" step="1" value="60">
+    <span id="opacity-readout" class="readout">60 %</span>
+  </div>
+
+  <!-- Focale popover: anchored near the chip in the top bar -->
+  <div id="focale-popover" class="popover hidden" role="dialog"
+       aria-labelledby="focale-popover-label">
+    <label id="focale-popover-label" for="focale-slider"
+           data-i18n="control.focale">Focale</label>
     <input type="range" id="focale-slider" min="15" max="120" step="1" value="26">
     <span id="focale-readout" class="readout">26 mm</span>
+  </div>
+
+  <!-- Settings sheet: opens from the gear icon -->
+  <div id="settings-sheet" class="sheet hidden" role="dialog"
+       aria-labelledby="settings-title">
+    <div class="sheet-content">
+      <header class="sheet-header">
+        <h3 id="settings-title" data-i18n="settings.title">Réglages</h3>
+        <button id="settings-close" class="icon-btn" type="button"
+                aria-label="Fermer">×</button>
+      </header>
+      <div class="setting-row">
+        <label for="mirror-radius-slider"
+               data-i18n="settings.mirrorRadius">Taille du miroir</label>
+        <input type="range" id="mirror-radius-slider"
+               min="3" max="20" step="1" value="11">
+        <span id="mirror-radius-readout" class="readout">11 mm</span>
+      </div>
+    </div>
   </div>
 
   <footer id="bottom-bar" class="chrome">

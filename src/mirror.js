@@ -126,6 +126,8 @@ export function createMirror(scene) {
     group,
     setEnabled, setRadius, setOpacity,
     applyPose,  dumpPose,
-    isEnabled: () => state.enabled,
+    isEnabled:  () => state.enabled,
+    getRadius:  () => state.radius,
+    getOpacity: () => state.opacity,
   };
 }

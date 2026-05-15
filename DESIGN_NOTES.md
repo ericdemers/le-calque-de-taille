@@ -79,6 +79,29 @@ the V1 experience is settled. A user who already knows about PWAs can
 install via the platform's own mechanism (see §11 below). To re-enable
 the toast: uncomment the call in `app.js`.
 
+### 16. Pattern B controls layout — chip + contextual slider + sheet.
+
+After V1.5's full-width focale slider felt too visually loud at startup,
+V1.6 reorganises tunable controls along three surfaces:
+
+- **Top-bar chip** for Focale (and future "always visible but rarely
+  changed" values). Compact « FOCALE 26 mm » pill — tap to open a small
+  floating popover with the slider. Visible value reassures the user
+  what the camera is set to; popover hides the slider until requested.
+- **Secondary bar** above the mode-segmented control hosts the
+  *contextual opacity slider* — its meaning tracks the active mode:
+  Référence → reference opacity, Miroir → mirror opacity, Vue → bar
+  hidden entirely (no slider needed in view mode).
+- **Settings sheet** behind a gear icon for less-frequent controls
+  (currently just mirror radius; later: reset, debug grid, etc.).
+  Bottom-up modal sheet with a backdrop, dismissable by tap-outside or
+  close button.
+
+The principle (progressive disclosure with the right defaults): everyday
+adjustments are one drag away (opacity, while you're aligning). Occasional
+adjustments are one tap away (focale, when perspective looks off). Rare
+ones are two taps away (gear → sheet).
+
 ### 15. Focale (focal-length) slider with apparent-size compensation.
 
 V1.5 adds a horizontal slider in a secondary bar between the photo and

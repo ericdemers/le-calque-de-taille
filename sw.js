@@ -11,7 +11,7 @@
 // Bump CACHE_VERSION whenever any precached file changes so old caches get
 // evicted on the next activate.
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `lct-${CACHE_VERSION}`;
 
 const APP_SHELL = [
