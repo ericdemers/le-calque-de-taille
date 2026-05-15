@@ -9,5 +9,7 @@
   "mode.mirror":    "Miroir",
   "mode.view":      "Vue",
 
+  "control.focale": "Focale",
+
   "ios.installHint": "Installer l'appli : Partager → Sur l'écran d'accueil"
 }

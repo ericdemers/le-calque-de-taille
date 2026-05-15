@@ -156,6 +156,63 @@ html, body {
   padding-bottom: max(8px, env(safe-area-inset-bottom));
   justify-content: center;
 }
+
+/* Secondary control bar — sits above the segmented mode bar. Currently
+   hosts the Focale slider; later, mode-contextual sliders (opacity, etc.)
+   will go here too. */
+#secondary-bar {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); /* clears bottom bar */
+  padding: 8px 16px;
+  gap: 12px;
+}
+#secondary-bar label {
+  color: var(--muted);
+  font-size: 13px;
+  min-width: 50px;
+}
+#secondary-bar input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 32px;
+  margin: 0;
+  cursor: pointer;
+}
+#secondary-bar input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background: #444;
+  border-radius: 2px;
+}
+#secondary-bar input[type="range"]::-moz-range-track {
+  height: 3px;
+  background: #444;
+  border-radius: 2px;
+}
+#secondary-bar input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-top: -10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+#secondary-bar input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+#secondary-bar .readout {
+  min-width: 56px;
+  text-align: right;
+  font: 12px ui-monospace, monospace;
+  color: var(--fg);
+}
 .chrome.hidden {
   opacity: 0;
   pointer-events: none;

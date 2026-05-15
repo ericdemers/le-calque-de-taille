@@ -11,7 +11,13 @@ const canvasEl  = document.getElementById('three-canvas');
 const stageEl   = document.getElementById('stage');
 const frameEl   = document.getElementById('photo-frame');
 const sampleSel = document.getElementById('sample-select');
-const fovReadout = document.getElementById('fov-readout');
+const focaleSlider  = document.getElementById('focale-slider');
+const focaleReadout = document.getElementById('focale-readout');
+
+// 35 mm-equivalent focal length ↔ vertical FOV (degrees).
+// 35 mm frame is 24 mm tall → half-height 12 mm.
+function focaleToFov(mm)   { return 2 * Math.atan(12 / mm) * 180 / Math.PI; }
+function fovToFocale(deg)  { return 12 / Math.tan(deg / 2 * Math.PI / 180); }
 
 let samples = [];
 let viewer = null;
@@ -31,6 +37,14 @@ async function init() {
     i18n.toggleLocale();
     refreshSampleSelect();
   };
+
+  // Focale slider — live-updates camera FOV with apparent-size compensation,
+  // so only perspective foreshortening changes (not scale) as the user drags.
+  focaleSlider.addEventListener('input', () => {
+    const mm = parseInt(focaleSlider.value, 10);
+    focaleReadout.textContent = `${mm} mm`;
+    if (viewer) viewer.setFov(focaleToFov(mm), { compensate: true });
+  });
 
   // Mode segmented control.
   // "Référence" = gestures move the 3D reference.
@@ -149,16 +163,18 @@ async function openEditorWithSample(sample) {
     viewer.mirror.setEnabled(false);
   }
 
-  // FOV resolution order: EXIF > manifest.fovHint > 50°.
-  let fov = 50;
-  let fovSource = 'default';
+  // Focale resolution order: manifest.focale > EXIF > 26 mm (iPhone wide).
+  // setFov runs with compensate: false because the calibrated startPose
+  // was captured at this focale — we just need to set the camera, not
+  // shift the mesh.
   const exif = await readFovFromFile(sample.photo);
-  if (exif?.fovDeg) { fov = exif.fovDeg; fovSource = 'exif'; }
-  else if (typeof sample.fovHint === 'number') {
-    fov = sample.fovHint; fovSource = 'manifest';
-  }
-  viewer.setFov(fov);
-  fovReadout.textContent = `FOV ${fov.toFixed(1)}° (${fovSource})`;
+  let focaleMm = 26;
+  if (typeof sample.focale === 'number') focaleMm = sample.focale;
+  else if (exif?.focaleMm)               focaleMm = exif.focaleMm;
+  focaleMm = Math.round(focaleMm);
+  viewer.setFov(focaleToFov(focaleMm), { compensate: false });
+  focaleSlider.value = focaleMm;
+  focaleReadout.textContent = `${focaleMm} mm`;
 
   welcomeEl.classList.add('hidden');
   editorEl.classList.remove('hidden');

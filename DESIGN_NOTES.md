@@ -79,6 +79,29 @@ the V1 experience is settled. A user who already knows about PWAs can
 install via the platform's own mechanism (see §11 below). To re-enable
 the toast: uncomment the call in `app.js`.
 
+### 15. Focale (focal-length) slider with apparent-size compensation.
+
+V1.5 adds a horizontal slider in a secondary bar between the photo and
+the mode controls. Range: 15–120 mm 35mm-equivalent. The slider value is
+shown in millimetres because dental students have done elementary
+physics — focal length is a familiar concept, more so than "vertical FOV
+in degrees."
+
+When the slider is dragged, the camera FOV updates **with apparent-size
+compensation**: the reference and mirror distances along the camera ray
+are scaled so their visual size stays constant. Only perspective
+foreshortening changes. This lets a student vary focale to find what
+matches the photo's perspective without size confusing them.
+
+Initial focale order: `sample.focale` (manifest, mm) → EXIF
+`FocalLengthIn35mmFilm` → fallback 26 mm (iPhone wide). On *initial
+load*, compensation is OFF, because the calibrated `startPose` was
+captured at the resolved focale already — we just set the camera.
+Compensation is ON only for user-driven slider changes.
+
+The previous `fovHint` manifest field is gone; samples either declare
+`focale` (a number, mm) or omit the field to use EXIF.
+
 ### 13. Canvas tracks photo aspect ratio, not viewport.
 
 Before V1.3, the Three.js canvas filled the viewport while the photo was

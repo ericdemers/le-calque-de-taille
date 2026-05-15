@@ -27,7 +27,8 @@ export async function readFovFromFile(fileOrUrl) {
     const halfMm = isPortrait ? HALF_PORTRAIT_MM : HALF_LANDSCAPE_MM;
     const fovDeg = 2 * Math.atan(halfMm / f35) * 180 / Math.PI;
     return {
-      fovDeg: Math.round(fovDeg * 10) / 10,
+      fovDeg:   Math.round(fovDeg * 10) / 10,
+      focaleMm: f35,
       source: {
         f35,
         make:  meta.Make,

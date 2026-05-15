@@ -9,5 +9,7 @@
   "mode.mirror":    "Mirror",
   "mode.view":      "View",
 
+  "control.focale": "Focal length",
+
   "ios.installHint": "Install this app: Share → Add to Home Screen"
 }

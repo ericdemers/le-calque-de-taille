@@ -61,8 +61,13 @@
   <header id="top-bar" class="chrome">
     <button id="btn-back" type="button" aria-label="Retour">←</button>
     <select id="sample-select" aria-label="Exemple"></select>
-    <span id="fov-readout" class="readout"></span>
   </header>
+
+  <div id="secondary-bar" class="chrome">
+    <label for="focale-slider" data-i18n="control.focale">Focale</label>
+    <input type="range" id="focale-slider" min="15" max="120" step="1" value="26">
+    <span id="focale-readout" class="readout">26 mm</span>
+  </div>
 
   <footer id="bottom-bar" class="chrome">
     <div class="segmented" role="tablist">

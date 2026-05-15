@@ -94,9 +94,35 @@ export function createViewer(canvas) {
     }
   }
 
-  function setFov(deg) {
+  // setFov(deg, { compensate })
+  //   compensate: false (default) — just set FOV. Used on initial sample
+  //     load when the calibrated startPose was captured AT this FOV.
+  //   compensate: true — also scale the reference + mirror distances along
+  //     the camera ray so their apparent size stays constant. Used when
+  //     the user drags the focale slider: only perspective foreshortening
+  //     changes, not scale, so they can tune perspective without depth
+  //     compensating against size.
+  function setFov(deg, { compensate = false } = {}) {
+    const oldFov = camera.fov;
+    if (compensate && oldFov && deg !== oldFov) {
+      const ratio = Math.tan(THREE.MathUtils.degToRad(oldFov) / 2) /
+                    Math.tan(THREE.MathUtils.degToRad(deg) / 2);
+      compensateDistanceFromCamera(referenceGroup, ratio);
+      if (mirror.isEnabled()) compensateDistanceFromCamera(mirror.group, ratio);
+    }
     camera.fov = deg;
     camera.updateProjectionMatrix();
+  }
+
+  // Scale obj's distance along the camera forward direction by `ratio`,
+  // leaving its perpendicular offset alone. This is exactly what keeps
+  // apparent size constant under a FOV change.
+  function compensateDistanceFromCamera(obj, ratio) {
+    const camFwd = new THREE.Vector3();
+    camera.getWorldDirection(camFwd);
+    const fromCam = new THREE.Vector3().subVectors(obj.position, camera.position);
+    const along   = fromCam.dot(camFwd);
+    obj.position.addScaledVector(camFwd, along * (ratio - 1));
   }
 
   function setReferenceOpacity(value01) {

@@ -7,7 +7,6 @@
     },
     "photo":     "samples/front-anterior.jpeg",
     "reference": "samples/maxilla_lps.stl",
-    "fovHint":   "from-exif",
     "startPose": {
       "position":     [10.19, -25.47, 11.4],
       "rotation_deg": [73.3, -6.7, 129.7]
