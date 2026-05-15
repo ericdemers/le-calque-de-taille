@@ -3,6 +3,11 @@
   "welcome.tagline":    "Compare, improve",
   "welcome.cta.example": "Try with an example",
   "welcome.cta.own":     "Use my photo and STL",
+  "welcome.stl.prompt":   "Which STL would you like to use?",
+  "welcome.stl.maxilla":  "Example: upper jaw",
+  "welcome.stl.mandible": "Example: lower jaw",
+  "welcome.stl.file":     "Choose a STL file…",
+  "welcome.stl.cancel":   "Cancel",
   "welcome.privacy":     "Everything stays on your device. No images are sent.",
 
   "mode.reference": "Reference",

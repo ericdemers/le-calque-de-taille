@@ -38,6 +38,26 @@
       Utiliser ma photo et mon STL
     </button>
 
+    <div id="stl-choice" class="hidden">
+      <p class="stl-prompt" data-i18n="welcome.stl.prompt">
+        Quel STL voulez-vous utiliser ?
+      </p>
+      <button class="cta secondary" data-stl="samples/maxilla_lps.stl"
+              data-i18n="welcome.stl.maxilla">Exemple : maxillaire</button>
+      <button class="cta secondary" data-stl="samples/mandible_lps.stl"
+              data-i18n="welcome.stl.mandible">Exemple : mandibule</button>
+      <button class="cta secondary" data-stl="file"
+              data-i18n="welcome.stl.file">Choisir un fichier STL…</button>
+      <button id="stl-cancel" class="link-btn" data-i18n="welcome.stl.cancel">
+        Annuler
+      </button>
+    </div>
+
+    <!-- Persistent file input. iOS Safari is unreliable with file inputs
+         created dynamically and not attached to the DOM — onchange fires
+         late or not at all after the camera UI suspends the page. -->
+    <input id="file-picker" type="file" hidden>
+
     <nav class="welcome-footer">
       <button id="lang-toggle" type="button">FR ⇄ EN</button>
     </nav>

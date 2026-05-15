@@ -3,6 +3,11 @@
   "welcome.tagline":    "Comparer, améliorer",
   "welcome.cta.example": "Essayer avec un exemple",
   "welcome.cta.own":     "Utiliser ma photo et mon STL",
+  "welcome.stl.prompt":   "Quel STL voulez-vous utiliser ?",
+  "welcome.stl.maxilla":  "Exemple : maxillaire",
+  "welcome.stl.mandible": "Exemple : mandibule",
+  "welcome.stl.file":     "Choisir un fichier STL…",
+  "welcome.stl.cancel":   "Annuler",
   "welcome.privacy":     "Tout reste sur votre appareil. Aucune image n'est envoyée.",
 
   "mode.reference": "Référence",

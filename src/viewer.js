@@ -65,16 +65,25 @@ export function createViewer(canvas) {
         // describes the user-visible pose.
         const bb = geom.boundingBox;
         const c = new THREE.Vector3(); bb.getCenter(c);
-        reference.position.set(-c.x, -bb.min.y - 5, -(bb.min.z + 8));
-        referenceGroup.add(reference);
+        const sz = new THREE.Vector3(); bb.getSize(sz);
 
-        // Generic default: LPS occlusal plane points up. Overridden when the
-        // sample declares a `startPose` — captured via `lct.dumpPose()`.
         if (startPose) {
+          // Calibrated LPS-frame mesh — keep the anterior-tooth anchor so the
+          // captured startPose lines up the same on every load.
+          reference.position.set(-c.x, -bb.min.y - 5, -(bb.min.z + 8));
+          referenceGroup.add(reference);
           applyPose(startPose);
         } else {
-          referenceGroup.rotation.set(-Math.PI / 2, 0, 0);
-          referenceGroup.position.set(0, 0, 0);
+          // Unknown mesh — center its bbox at the group origin and pull the
+          // group back along -Z so the bounding sphere fits comfortably in
+          // the camera frustum. No opinion on rotation; the user can spin it.
+          reference.position.set(-c.x, -c.y, -c.z);
+          referenceGroup.add(reference);
+          referenceGroup.rotation.set(0, 0, 0);
+          const r = Math.max(sz.x, sz.y, sz.z) / 2;
+          const fovRad = THREE.MathUtils.degToRad(camera.fov);
+          const dist = (r * 1.6) / Math.tan(fovRad / 2);
+          referenceGroup.position.set(0, 0, camera.position.z - dist);
         }
         referenceInitial.pos.copy(referenceGroup.position);
         referenceInitial.rot.copy(referenceGroup.rotation);

@@ -74,6 +74,23 @@ html, body {
 }
 .cta:active { transform: scale(0.98); }
 
+#stl-choice.hidden { display: none; }
+.stl-prompt {
+  margin: 24px 0 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.link-btn {
+  display: block;
+  margin: 8px auto 0;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
 .welcome-footer {
   margin-top: 32px;
   display: flex;

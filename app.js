@@ -51,6 +51,10 @@ async function init() {
     () => openEditorWithSample(samples[0]);
   document.getElementById('btn-own').onclick = pickOwnPhoto;
   document.getElementById('btn-back').onclick = backToWelcome;
+  document.getElementById('stl-cancel').onclick = cancelOwnPick;
+  stlChoiceEl.querySelectorAll('[data-stl]').forEach((b) => {
+    b.onclick = () => chooseStl(b.dataset.stl);
+  });
   document.getElementById('lang-toggle').onclick = () => {
     i18n.toggleLocale();
     refreshSampleSelect();
@@ -155,6 +159,11 @@ function refreshSampleSelect() {
 }
 
 async function openEditorWithSample(sample) {
+  if (!sample?.photo || !sample?.reference) {
+    console.error('[lct] openEditorWithSample missing photo or reference:', sample);
+    alert('Photo or STL is missing — please try again.');
+    return;
+  }
   // Lazy-init the viewer + gestures the first time we enter the editor.
   if (!viewer) {
     viewer = createViewer(canvasEl);
@@ -283,39 +292,88 @@ function fitFrameToPhoto() {
   viewer.resize(frameW, frameH);
 }
 
-function pickOwnPhoto() {
-  // openEditorWithSample re-reads EXIF from the photo URL, so we don't need
-  // to read it here too. Just collect the two file URLs and hand off.
-  const photoInput = document.createElement('input');
-  photoInput.type = 'file';
-  photoInput.accept = 'image/jpeg,image/png';
-  photoInput.onchange = () => {
-    const photoFile = photoInput.files?.[0];
-    if (!photoFile) return;
-    const photoUrl = URL.createObjectURL(photoFile);
+// "Use my photo and STL" — two stages, two user gestures.
+// Browsers (Chrome/Safari/iOS) block a programmatic input.click() that
+// isn't tied to the most recent user gesture, so photo and STL each need
+// their own click. Between them, an inline #stl-choice panel lets the
+// user pick a sample STL OR open a file picker.
+const btnExample = document.getElementById('btn-example');
+const btnOwn = document.getElementById('btn-own');
+const stlChoiceEl = document.getElementById('stl-choice');
+let ownPickPhotoUrl = null;
 
-    const stlInput = document.createElement('input');
-    stlInput.type = 'file';
-    stlInput.accept = '.stl';
-    stlInput.onchange = () => {
-      const stlFile = stlInput.files?.[0];
-      if (!stlFile) return;
-      const stlUrl = URL.createObjectURL(stlFile);
-      openEditorWithSample({
-        id: 'custom',
-        title: { fr: 'Ma photo', en: 'My photo' },
-        photo: photoUrl,
-        reference: stlUrl,
-      });
-    };
-    stlInput.click();
+function pickOwnPhoto() {
+  promptForFile('image/jpeg,image/png', (url) => {
+    ownPickPhotoUrl = url;
+    showStlChoice();
+  });
+}
+
+function showStlChoice() {
+  btnExample.classList.add('hidden');
+  btnOwn.classList.add('hidden');
+  stlChoiceEl.classList.remove('hidden');
+}
+
+function hideStlChoice() {
+  stlChoiceEl.classList.add('hidden');
+  btnExample.classList.remove('hidden');
+  btnOwn.classList.remove('hidden');
+}
+
+function chooseStl(source) {
+  const finish = (stlUrl) => {
+    const photoUrl = ownPickPhotoUrl;
+    ownPickPhotoUrl = null; // hand off — don't revoke; editor holds it
+    hideStlChoice();
+    openEditorWithSample({
+      id: 'custom',
+      title: { fr: 'Ma photo', en: 'My photo' },
+      photo: photoUrl,
+      reference: stlUrl,
+    });
   };
-  photoInput.click();
+  if (source === 'file') {
+    promptForFile('.stl,model/stl,application/sla', finish);
+  } else {
+    finish(source);
+  }
+}
+
+function cancelOwnPick() {
+  if (ownPickPhotoUrl) URL.revokeObjectURL(ownPickPhotoUrl);
+  ownPickPhotoUrl = null;
+  hideStlChoice();
+}
+
+const filePicker = document.getElementById('file-picker');
+
+function promptForFile(accept, onFile) {
+  // Reuse the same DOM-attached input. iOS Safari sometimes loses the
+  // onchange event when the input element is detached (created with
+  // document.createElement and never inserted), especially when the page
+  // is suspended by the camera UI.
+  filePicker.accept = accept;
+  filePicker.value = '';  // allow re-selecting the same file
+  filePicker.onchange = () => {
+    const f = filePicker.files?.[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    if (!url) {
+      console.error('[lct] URL.createObjectURL returned no URL for', f);
+      return;
+    }
+    onFile(url);
+  };
+  filePicker.click();
 }
 
 function backToWelcome() {
   editorEl.classList.add('hidden');
   welcomeEl.classList.remove('hidden');
+  // Drop the photo so a stale image can't appear if the next pick fails.
+  photoImg.removeAttribute('src');
+  cancelOwnPick();
 }
 
 // Show the right slider in the secondary bar for the active mode.
