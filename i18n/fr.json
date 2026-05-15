@@ -1,0 +1,11 @@
+{
+  "welcome.title":      "Le Calque de Taille",
+  "welcome.tagline":    "Comparer, améliorer",
+  "welcome.cta.example": "Essayer avec un exemple",
+  "welcome.cta.own":     "Utiliser ma photo et mon STL",
+  "welcome.privacy":     "Tout reste sur votre appareil. Aucune image n'est envoyée.",
+
+  "mode.reference": "Référence",
+  "mode.mirror":    "Miroir",
+  "mode.view":      "Vue"
+}

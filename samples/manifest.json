@@ -1,0 +1,16 @@
+[
+  {
+    "id": "front-anterior",
+    "title": {
+      "fr": "Vue de face — antérieures",
+      "en": "Front view — anteriors"
+    },
+    "photo":     "samples/front-anterior.jpeg",
+    "reference": "samples/maxilla_lps.stl",
+    "fovHint":   "from-exif",
+    "startPose": {
+      "position":     [10.16, -25.59, 8.6],
+      "rotation_deg": [75, -6.8, 130.6]
+    }
+  }
+]
