@@ -13,7 +13,7 @@
       "rotation_deg": [73.4, -6.3, 128.1]
     },
     "mirror": {
-      "enabled":      true,
+      "enabled":      false,
       "position":     [-1.9, 3.84, 3.2],
       "rotation_deg": [32.1, -7, -5.1],
       "radius":       11,
