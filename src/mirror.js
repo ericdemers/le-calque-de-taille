@@ -17,7 +17,7 @@ import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 
 const DEFAULT_RADIUS_MM      = 11.0;
-const DEFAULT_OPACITY        = 1.0;
+const DEFAULT_OPACITY        = 0.7;
 const DEFAULT_POSITION       = [0, -15, -5];
 const DEFAULT_ROTATION_DEG   = [-45, 0, 0];
 const REFLECTOR_TEX_SIZE     = 1024;
