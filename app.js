@@ -189,7 +189,7 @@ function backToWelcome() {
 
 init();
 registerServiceWorker();
-maybeShowIosInstallHint();
+// maybeShowIosInstallHint();  // disabled in V1.2 — see DESIGN_NOTES.md §12
 
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;

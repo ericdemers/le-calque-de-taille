@@ -67,6 +67,15 @@ declared in `samples/manifest.json` as `"mirror": { enabled, radius,
 opacity, position, rotation_deg }`. Capture a good mirror pose with
 `lct.dumpMirrorPose()` after dragging it into place.
 
+### 12. The iOS "Add to Home Screen" toast is wired but not shown.
+
+The `maybeShowIosInstallHint()` function exists in `app.js` and the
+French/English strings are in `i18n/*.json`, but the call site is
+commented out. We did not want to push installation on users before
+the V1 experience is settled. A user who already knows about PWAs can
+install via the platform's own mechanism (see §11 below). To re-enable
+the toast: uncomment the call in `app.js`.
+
 ### 11. PWA installs from Safari → Share → Sur l'écran d'accueil.
 
 V1.2 makes the app installable as a Progressive Web App: `manifest.web
