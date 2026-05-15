@@ -212,7 +212,9 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* Floating popover (e.g. focale slider) anchored under the top bar */
+/* Floating popover (e.g. focale slider) anchored under the top bar.
+   Animates from a scale-down origin near the top-right (where the chip
+   that triggers it sits) — opens AND closes through CSS transitions. */
 .popover {
   position: fixed;
   top: calc(max(8px, env(safe-area-inset-top)) + 52px);
@@ -229,8 +231,17 @@ input[type="range"]::-moz-range-thumb {
   gap: 10px;
   min-width: 240px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  opacity: 1;
+  transform: scale(1);
+  transform-origin: top right;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 }
-.popover.hidden { display: none; }
+.popover.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.92);
+}
 .popover label {
   color: var(--muted);
   font-size: 12px;
@@ -239,7 +250,11 @@ input[type="range"]::-moz-range-thumb {
 .popover input[type="range"] { flex: 1; }
 .popover .readout { min-width: 56px; text-align: right; }
 
-/* Bottom sheet (settings) */
+/* Bottom sheet (settings). Backdrop fades; content slides from below.
+   Both open AND close use CSS transitions — visibility transitions on a
+   delay equal to the duration, so the element stays interactive while
+   sliding out (pointer-events: none on .hidden prevents accidental
+   re-clicks during the exit). */
 .sheet {
   position: fixed;
   inset: 0;
@@ -247,8 +262,14 @@ input[type="range"]::-moz-range-thumb {
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: flex-end;
+  opacity: 1;
+  transition: opacity 0.22s ease, visibility 0.22s;
 }
-.sheet.hidden { display: none; }
+.sheet.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 .sheet-content {
   width: 100%;
   background: #1a1a1a;
@@ -257,11 +278,11 @@ input[type="range"]::-moz-range-thumb {
   padding: 16px 16px max(16px, env(safe-area-inset-bottom));
   max-height: 60vh;
   overflow-y: auto;
-  animation: sheet-in 0.22s ease;
+  transform: translateY(0);
+  transition: transform 0.22s ease;
 }
-@keyframes sheet-in {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0);    }
+.sheet.hidden .sheet-content {
+  transform: translateY(100%);
 }
 .sheet-header {
   display: flex;
