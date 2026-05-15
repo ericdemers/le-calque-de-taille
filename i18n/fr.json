@@ -7,5 +7,7 @@
 
   "mode.reference": "Référence",
   "mode.mirror":    "Miroir",
-  "mode.view":      "Vue"
+  "mode.view":      "Vue",
+
+  "ios.installHint": "Installer l'appli : Partager → Sur l'écran d'accueil"
 }

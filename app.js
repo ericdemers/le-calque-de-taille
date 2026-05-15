@@ -188,3 +188,39 @@ function backToWelcome() {
 }
 
 init();
+registerServiceWorker();
+maybeShowIosInstallHint();
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  // file:// pages can't register service workers — skip silently so the
+  // "open index.html directly" dev workflow still works.
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+
+function maybeShowIosInstallHint() {
+  if (localStorage.getItem('lct.iosHintShown') === '1') return;
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const alreadyInstalled = window.navigator.standalone === true;
+  if (!isIos || alreadyInstalled) return;
+
+  // Defer until i18n strings are loaded so we can localise.
+  setTimeout(() => {
+    const toast = document.createElement('div');
+    toast.className = 'ios-install-hint';
+    toast.textContent = i18n.t('ios.installHint');
+    toast.addEventListener('click', dismiss);
+    document.body.appendChild(toast);
+    const t = setTimeout(dismiss, 12000);
+    function dismiss() {
+      clearTimeout(t);
+      toast.remove();
+      localStorage.setItem('lct.iosHintShown', '1');
+    }
+  }, 1200);
+}

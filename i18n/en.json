@@ -7,5 +7,7 @@
 
   "mode.reference": "Reference",
   "mode.mirror":    "Mirror",
-  "mode.view":      "View"
+  "mode.view":      "View",
+
+  "ios.installHint": "Install this app: Share → Add to Home Screen"
 }

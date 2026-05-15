@@ -59,13 +59,31 @@ Miroir is now wired (V1.1). Vue — pinch-zoom on the whole composite
 piece. It's a CSS-transform on `#stage` plus minor gesture routing,
 much smaller in scope than Miroir was.
 
-Miroir's V1.1 ships with hardcoded defaults (radius 8 mm, opacity 1.0,
+Miroir's V1.1 ships with hardcoded defaults (radius 11 mm, opacity 0.7,
 position from align.html). Console helpers `lct.setMirrorRadius()` and
 `lct.setMirrorOpacity()` let you dial values from a phone for testing
 before committing to a UI control. Per-sample mirror config can be
 declared in `samples/manifest.json` as `"mirror": { enabled, radius,
 opacity, position, rotation_deg }`. Capture a good mirror pose with
 `lct.dumpMirrorPose()` after dragging it into place.
+
+### 11. PWA installs from Safari → Share → Sur l'écran d'accueil.
+
+V1.2 makes the app installable as a Progressive Web App: `manifest.web
+manifest` declares the icon and standalone display mode; `sw.js`
+precaches the app shell and samples, and caches CDN imports of
+three.js + exifr at runtime, so subsequent launches work offline.
+
+On iOS there is no install-prompt API, so we show a one-time toast
+(« Installer l'appli : Partager → Sur l'écran d'accueil ») when the
+user lands on the welcome screen via mobile Safari. Dismiss
+once, never shown again (stored in `localStorage`).
+
+The icon is `icons/icon.png` at 768×768. It already has rounded
+corners in the artwork, so iOS will apply its own rounding on top —
+fine for V1 but a vector source without built-in rounding would be
+cleaner at higher sizes. A second-pass redesign is in scope for
+the student team.
 
 ### 7. Welcome screen shown every launch (V1).
 

@@ -48,16 +48,21 @@ the team first.
 
 ```
 index.html               Welcome screen + editor (single page, two sections)
-app.js                   Entry point — wires routes, samples, gestures
+app.js                   Entry point — wires routes, samples, gestures, SW
 styles.css               All styles (mobile-first, dark)
+manifest.webmanifest     PWA manifest (icons, theme, display: standalone)
+sw.js                    Service worker (cache-first; offline app shell)
 src/
   viewer.js              Three.js scene, fixed camera, reference mesh
+  mirror.js              Virtual dental mirror disc (Reflector + ring)
   gestures.js            PointerEvents → rotate / pan / push on active object
   exif.js                FocalLengthIn35mmFilm → vertical FOV
   i18n.js                Minimal locale switcher (FR default, EN toggle)
 i18n/
   fr.json                French UX strings (canonical — default locale)
   en.json                English UX strings
+icons/
+  icon.png               768×768 app icon used by manifest + apple-touch-icon
 samples/
   manifest.json          List of bundled examples
   front-anterior.jpeg    iPhone 14 photo with full EXIF (demo for auto-FOV)
@@ -93,6 +98,14 @@ CLAUDE.md                One-line pointer to this file
 - **EXIF orientation.** Portrait photos (Orientation 6 or 8) need the
   vertical-FOV calculation to use the 36 mm dimension instead of 24 mm.
   `src/exif.js` handles this.
+- **Service worker caches aggressively.** During development, edits to
+  any precached file may not appear after reload because the SW serves
+  the old version from cache. Two fixes: (a) bump `CACHE_VERSION` in
+  `sw.js` whenever you change a precached file, or (b) in DevTools →
+  Application → Service Workers, tick "Update on reload" while iterating.
+  The `file://` protocol can't register service workers, so opening
+  `index.html` directly avoids the issue entirely — but you also lose
+  any feature that requires `fetch()` of local files.
 
 ## When extending the app
 
