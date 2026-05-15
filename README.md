@@ -6,29 +6,10 @@
 
 ![A 3D maxilla mesh and a virtual dental mirror disc overlaid on a phone photo of a dentoforme.](screenshots/hero.jpg)
 
-A mobile-first, open-source web app for dental students. Overlay a 3D
-reference mesh onto a dental photo you took with a phone, manipulate
-the reference with touch gestures until it matches what you see, and
-build the spatial reasoning that clinical work demands.
-
-**This app does not evaluate your preparation.** It is a perceptual
-training tool — a way to see in 2D and think in 3D, without needing a
-scanner. For quantitative evaluation, use the team's scanner-based
-companion app.
-
-## Run it locally
-
-No build step. Open `index.html` in a browser:
-
-```sh
-python3 -m http.server
-# then visit http://localhost:8000
-```
-
-Some browsers (Chrome in particular) refuse to `fetch()` local files
-when you double-click `index.html` — use the local server above.
-
-To test on a real iPhone over your LAN, see `AGENTS.md`.
+An open-source web app for dental students learning tooth preparation.
+Snap a phone photo of your work, overlay a 3D reference mesh on top
+of it, and drag the reference into alignment with touch gestures — a
+way to see in 2D and think in 3D, without needing a scanner.
 
 ## What it does
 
@@ -54,22 +35,6 @@ To test on a real iPhone over your LAN, see `AGENTS.md`.
   d'accueil*; works offline after the first online load.
 - **French + English UI** — French default, English toggle on the
   welcome screen.
-
-## Deploying to GitHub Pages
-
-1. Push this repo to GitHub.
-2. **Settings → Pages** → Source: "Deploy from a branch", branch `main`,
-   folder `/ (root)`.
-3. After ~1 minute the site is live at
-   `https://<your-user>.github.io/<repo-name>/`.
-
-The service worker uses relative paths and a relative scope, so the app
-works at any subpath. No GitHub Actions or extra config needed.
-
-**Pushing updates:** when you change a precached file (HTML, JS, CSS,
-samples), bump `CACHE_VERSION` in `sw.js` so existing PWA installs pick
-up the new version on the next launch. Otherwise the worker serves the
-old cached copy until eviction.
 
 ## Contributing
 
