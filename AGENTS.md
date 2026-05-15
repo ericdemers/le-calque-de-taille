@@ -6,7 +6,7 @@ Project-wide instructions for any AI coding assistant working on
 ## What this app is
 
 A mobile-first, GitHub-Pages-hosted, open-source web app that lets dental
-students **overlay a 3D reference mesh onto an intraoral photo** they took
+students **overlay a 3D reference mesh onto a dental photo** they took
 with a phone. It is the *no-scanner-needed* sibling of a separate
 scanner-based STL-comparison tool that the team already maintains.
 

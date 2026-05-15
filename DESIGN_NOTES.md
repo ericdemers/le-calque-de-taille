@@ -32,7 +32,7 @@ this, write down what changed in your understanding.
 ### 3. No framing guide / no photo-quality tips in V1.
 
 You — the dental students — will know more about what makes a good
-intraoral photo than we do, once you've used the app on real dentoformes
+dental photo than we do, once you've used the app on real dentoformes
 and felt the rough edges. The slot is intentionally empty. Fill it with
 what you learn.
 

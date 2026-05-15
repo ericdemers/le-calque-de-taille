@@ -3,7 +3,7 @@
 > *Comparer, améliorer.*
 
 A mobile-first, open-source web app for dental students. Overlay a 3D
-reference mesh onto an intraoral photo you took with a phone, manipulate
+reference mesh onto a dental photo you took with a phone, manipulate
 the reference with touch gestures until it matches what you see, and
 build the spatial reasoning that clinical work demands.
 
