@@ -59,8 +59,10 @@
   </div>
 
   <header id="top-bar" class="chrome">
-    <button id="btn-back" type="button" aria-label="Retour">←</button>
-    <select id="sample-select" aria-label="Exemple"></select>
+    <button id="btn-back" type="button"
+            data-i18n-aria="aria.back" aria-label="Retour">←</button>
+    <select id="sample-select"
+            data-i18n-aria="aria.sample" aria-label="Exemple"></select>
     <button id="btn-undo" class="icon-btn" type="button"
             data-i18n-aria="control.undo" aria-label="Annuler" disabled>
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
@@ -75,7 +77,7 @@
       <span class="chip-value" id="focale-value">— mm</span>
     </button>
     <button id="btn-settings" class="icon-btn" type="button"
-            aria-label="Réglages">⚙</button>
+            data-i18n-aria="aria.settings" aria-label="Réglages">⚙</button>
   </header>
 
   <div id="secondary-bar" class="chrome">
@@ -100,7 +102,7 @@
       <header class="sheet-header">
         <h3 id="settings-title" data-i18n="settings.title">Réglages</h3>
         <button id="settings-close" class="icon-btn" type="button"
-                aria-label="Fermer">×</button>
+                data-i18n-aria="aria.close" aria-label="Fermer">×</button>
       </header>
       <div class="setting-row">
         <label for="mirror-radius-slider"

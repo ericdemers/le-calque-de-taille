@@ -15,5 +15,10 @@
   "settings.title":      "Settings",
   "settings.mirrorRadius": "Mirror size",
 
+  "aria.back":           "Back",
+  "aria.sample":         "Sample",
+  "aria.settings":       "Settings",
+  "aria.close":          "Close",
+
   "ios.installHint": "Install this app: Share → Add to Home Screen"
 }

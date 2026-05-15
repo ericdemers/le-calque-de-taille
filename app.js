@@ -284,19 +284,20 @@ function fitFrameToPhoto() {
 }
 
 function pickOwnPhoto() {
+  // openEditorWithSample re-reads EXIF from the photo URL, so we don't need
+  // to read it here too. Just collect the two file URLs and hand off.
   const photoInput = document.createElement('input');
   photoInput.type = 'file';
   photoInput.accept = 'image/jpeg,image/png';
-  photoInput.onchange = async () => {
+  photoInput.onchange = () => {
     const photoFile = photoInput.files?.[0];
     if (!photoFile) return;
-    const exif = await readFovFromFile(photoFile);
     const photoUrl = URL.createObjectURL(photoFile);
 
     const stlInput = document.createElement('input');
     stlInput.type = 'file';
     stlInput.accept = '.stl';
-    stlInput.onchange = async () => {
+    stlInput.onchange = () => {
       const stlFile = stlInput.files?.[0];
       if (!stlFile) return;
       const stlUrl = URL.createObjectURL(stlFile);
@@ -305,7 +306,6 @@ function pickOwnPhoto() {
         title: { fr: 'Ma photo', en: 'My photo' },
         photo: photoUrl,
         reference: stlUrl,
-        fovHint: exif?.fovDeg ?? null,
       });
     };
     stlInput.click();

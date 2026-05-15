@@ -15,5 +15,10 @@
   "settings.title":      "Réglages",
   "settings.mirrorRadius": "Taille du miroir",
 
+  "aria.back":           "Retour",
+  "aria.sample":         "Exemple",
+  "aria.settings":       "Réglages",
+  "aria.close":          "Fermer",
+
   "ios.installHint": "Installer l'appli : Partager → Sur l'écran d'accueil"
 }

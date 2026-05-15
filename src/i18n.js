@@ -44,4 +44,8 @@ function apply() {
     const key = el.getAttribute('data-i18n');
     el.textContent = t(key);
   });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria');
+    el.setAttribute('aria-label', t(key));
+  });
 }
