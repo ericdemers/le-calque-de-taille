@@ -4,12 +4,12 @@
 
 **Live demo:** <https://ericdemers.github.io/le-calque-de-taille/>
 
-![A 3D maxilla mesh and a virtual dental mirror disc overlaid on a phone photo of a dentoforme.](screenshots/hero.jpg)
+![A 3D Reference of a maxilla and a virtual dental mirror disc overlaid on a phone photo of a dentoforme.](screenshots/hero.jpg)
 
 An open-source web app for dental students learning tooth preparation.
-Snap a phone photo of your work, overlay a 3D reference mesh on top
-of it, and drag the reference into alignment with touch gestures — a
-way to see in 2D and think in 3D, without needing a scanner.
+Snap a phone photo of your work, overlay a 3D Reference on top of it,
+and drag the 3D Reference into alignment with touch gestures — a way
+to see in 2D and think in 3D, without needing a scanner.
 
 ## What it does
 
@@ -25,7 +25,7 @@ way to see in 2D and think in 3D, without needing a scanner.
   poses untouched.
 - **Focal length adjustment.** Auto-read from EXIF
   (`FocalLengthIn35mmFilm`), tunable via a slider in millimetres.
-  Compensated so the mesh doesn't visibly grow or shrink — only
+  Compensated so the 3D Reference doesn't visibly grow or shrink — only
   perspective foreshortening changes.
 - **Contextual opacity slider** for the reference (in Référence mode) or
   the mirror (in Miroir mode).
