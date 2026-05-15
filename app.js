@@ -1,5 +1,6 @@
 import { createViewer } from './src/viewer.js';
 import { attachGestures } from './src/gestures.js';
+import { createViewTransform } from './src/view.js';
 import { readFovFromFile } from './src/exif.js';
 import * as i18n from './src/i18n.js';
 
@@ -14,7 +15,8 @@ const fovReadout = document.getElementById('fov-readout');
 
 let samples = [];
 let viewer = null;
-let activeMode = 'reference'; // 'reference' | 'mirror'
+let viewTransform = null;
+let activeMode = 'reference'; // 'reference' | 'mirror' | 'view'
 
 async function init() {
   await i18n.init();
@@ -77,11 +79,17 @@ async function openEditorWithSample(sample) {
   // Lazy-init the viewer + gestures the first time we enter the editor.
   if (!viewer) {
     viewer = createViewer(canvasEl);
+    viewTransform = createViewTransform(frameEl);
     attachGestures({
       canvas: canvasEl,
       camera: viewer.camera,
-      getActiveObject: () =>
-        activeMode === 'mirror' ? viewer.mirror.group : viewer.referenceGroup,
+      getActiveObject: () => {
+        if (activeMode === 'mirror')    return viewer.mirror.group;
+        if (activeMode === 'reference') return viewer.referenceGroup;
+        return null; // view mode — viewTransform takes over
+      },
+      getMode: () => activeMode,
+      viewTransform,
     });
     window.addEventListener('resize', fitFrameToPhoto);
     photoImg.addEventListener('load', fitFrameToPhoto);
@@ -107,6 +115,8 @@ async function openEditorWithSample(sample) {
       dumpMirrorPose: () => viewer.mirror.dumpPose(),
       setMirrorRadius:  (mm)  => viewer.mirror.setRadius(mm),
       setMirrorOpacity: (v01) => viewer.mirror.setOpacity(v01),
+      viewTransform,
+      resetView: () => viewTransform.reset(),
     };
   }
 
@@ -116,6 +126,10 @@ async function openEditorWithSample(sample) {
     const next = samples.find(s => s.id === sampleSel.value);
     if (next) openEditorWithSample(next);
   };
+
+  // Fresh sample → fresh viewport zoom/pan. Otherwise the previous sample's
+  // zoom-into-detail would persist, which is almost never what the user wants.
+  viewTransform?.reset();
 
   photoImg.src = sample.photo;
   await viewer.loadReferenceSTL(sample.reference, { startPose: sample.startPose });

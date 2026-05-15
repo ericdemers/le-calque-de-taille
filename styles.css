@@ -107,10 +107,13 @@ html, body {
   overflow: hidden;
 }
 /* photo-frame is the alignment surface — its width/height are set by JS
-   to match the photo's aspect ratio. Photo + canvas fill it exactly. */
+   to match the photo's aspect ratio. Photo + canvas fill it exactly.
+   In Vue mode, this element is the CSS transform target (zoom + pan). */
 #photo-frame {
   position: relative;
   background: #000;
+  transform-origin: center center;
+  will-change: transform;
 }
 #photo-img {
   position: absolute;

@@ -52,20 +52,23 @@ Once you've tried aligning the bundled sample many times, decide whether
 saving and replaying a reference pose helps learning or short-circuits
 it. Both positions are defensible.
 
-### 6. Vue is still disabled in the bottom-bar segmented control.
+### 6. All three segmented-control modes are now wired.
 
-Miroir is now wired (V1.1). Vue — pinch-zoom on the whole composite
-(photo + canvas + mirror) — remains disabled and is the next obvious
-piece. It's a CSS-transform on `#stage` plus minor gesture routing,
-much smaller in scope than Miroir was.
+Référence (V1.0), Miroir (V1.1), and Vue (V1.4) are all functional.
 
-Miroir's V1.1 ships with hardcoded defaults (radius 11 mm, opacity 0.7,
-position from align.html). Console helpers `lct.setMirrorRadius()` and
-`lct.setMirrorOpacity()` let you dial values from a phone for testing
-before committing to a UI control. Per-sample mirror config can be
-declared in `samples/manifest.json` as `"mirror": { enabled, radius,
+Miroir's defaults (radius 11 mm, opacity 0.7) come from `src/mirror.js`;
+the per-sample manifest can override via `"mirror": { enabled, radius,
 opacity, position, rotation_deg }`. Capture a good mirror pose with
-`lct.dumpMirrorPose()` after dragging it into place.
+`lct.dumpMirrorPose()` after dragging it into place. By convention,
+samples ship with `enabled: false` (progressive disclosure — see §14)
+unless the sample is specifically *about* the mirror feature.
+
+Vue is a CSS transform on `#photo-frame` (`src/view.js`). Pan via
+1-finger drag, pinch-zoom around the touch midpoint, wheel-zoom
+around the cursor. Scale is clamped to 1.0–8.0. Console helper
+`lct.resetView()` restores the identity transform. The Vue transform
+auto-resets on every new sample load — it would almost never be the
+right thing to keep a deep zoom-into-detail across samples.
 
 ### 12. The iOS "Add to Home Screen" toast is wired but not shown.
 

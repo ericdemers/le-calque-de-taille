@@ -55,7 +55,8 @@ sw.js                    Service worker (cache-first; offline app shell)
 src/
   viewer.js              Three.js scene, fixed camera, reference mesh
   mirror.js              Virtual dental mirror disc (Reflector + ring)
-  gestures.js            PointerEvents → rotate / pan / push on active object
+  view.js                Vue-mode CSS transform (pan + pinch-zoom)
+  gestures.js            PointerEvents → 3D ops or CSS transform per mode
   exif.js                FocalLengthIn35mmFilm → vertical FOV
   i18n.js                Minimal locale switcher (FR default, EN toggle)
 i18n/

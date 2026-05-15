@@ -1,13 +1,21 @@
 // gestures.js — PointerEvents-based gesture grammar.
 //
-// One grammar, mouse + touch + stylus all routed through PointerEvents:
+// One grammar, mouse + touch + stylus all routed through PointerEvents.
+//
+// In 3D modes (Référence, Miroir):
 //   1 pointer   → rotate the active object around its centre
-//   2 pointers  → pan (midpoint translation) + push (pinch distance)
+//   2 pointers  → pan the object (midpoint translation) + push along view
+//                 ray (pinch distance)
 //   wheel       → push along the view ray
 //   right-click → pan (mouse only)
 //
-// "Active object" is whatever getActiveObject() returns. In v0.1 that's
-// always the 3D reference; later the mirror disc, etc.
+// In view mode (Vue): same pointer counts, different applications.
+//   1 pointer   → translate the viewport (CSS pan)
+//   2 pointers  → translate + pinch-zoom around the midpoint
+//   wheel       → zoom around the cursor
+//
+// "Active object" is whatever getActiveObject() returns. In view mode it
+// returns null and viewTransform takes over.
 
 import * as THREE from 'three';
 
@@ -15,8 +23,9 @@ const ROTATE_SENS              = 0.006;
 const PAN_SENS_MM_PER_PX       = 0.10;
 const PUSH_SENS_MM_PER_PINCH   = 0.30;
 const PUSH_SENS_MM_PER_WHEEL   = 0.10;
+const WHEEL_ZOOM_EXP_BASE      = 0.998;  // ratio = base^deltaY
 
-export function attachGestures({ canvas, camera, getActiveObject }) {
+export function attachGestures({ canvas, camera, getActiveObject, getMode, viewTransform }) {
   const pointers = new Map();   // pointerId → {x,y}
   let lastSingle = null;        // {x,y}
   let lastTwoMid = null;        // {x,y}
@@ -43,6 +52,39 @@ export function attachGestures({ canvas, camera, getActiveObject }) {
     if (!pointers.has(e.pointerId)) return;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
+    const mode = getMode?.() ?? '3d';
+    if (mode === 'view') {
+      moveView();
+    } else {
+      moveObject();
+    }
+    e.preventDefault();
+  }
+
+  function moveView() {
+    if (!viewTransform) return;
+    if (pointers.size === 1) {
+      const p = pointers.values().next().value;
+      if (lastSingle) {
+        viewTransform.panBy(p.x - lastSingle.x, p.y - lastSingle.y);
+      }
+      lastSingle = { x: p.x, y: p.y };
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const mid  = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (lastTwoMid) {
+        viewTransform.panBy(mid.x - lastTwoMid.x, mid.y - lastTwoMid.y);
+      }
+      if (lastTwoDist != null && lastTwoDist > 0) {
+        viewTransform.scaleBy(dist / lastTwoDist, mid.x, mid.y);
+      }
+      lastTwoMid  = mid;
+      lastTwoDist = dist;
+    }
+  }
+
+  function moveObject() {
     const obj = getActiveObject();
     if (!obj) return;
 
@@ -87,7 +129,6 @@ export function attachGestures({ canvas, camera, getActiveObject }) {
       lastTwoMid  = mid;
       lastTwoDist = dist;
     }
-    e.preventDefault();
   }
 
   function onUp(e) {
@@ -97,11 +138,19 @@ export function attachGestures({ canvas, camera, getActiveObject }) {
   }
 
   function onWheel(e) {
-    const obj = getActiveObject();
-    if (!obj) return;
-    const camFwd = new THREE.Vector3();
-    camera.getWorldDirection(camFwd);
-    obj.position.addScaledVector(camFwd, -e.deltaY * PUSH_SENS_MM_PER_WHEEL);
+    const mode = getMode?.() ?? '3d';
+    if (mode === 'view') {
+      if (!viewTransform) return;
+      // Exponential ratio gives smooth zoom regardless of wheel delta granularity.
+      const ratio = Math.pow(WHEEL_ZOOM_EXP_BASE, e.deltaY);
+      viewTransform.scaleBy(ratio, e.clientX, e.clientY);
+    } else {
+      const obj = getActiveObject();
+      if (!obj) return;
+      const camFwd = new THREE.Vector3();
+      camera.getWorldDirection(camFwd);
+      obj.position.addScaledVector(camFwd, -e.deltaY * PUSH_SENS_MM_PER_WHEEL);
+    }
     e.preventDefault();
   }
 
