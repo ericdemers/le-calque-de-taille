@@ -368,6 +368,7 @@ function captureState() {
   const r = viewer.referenceGroup;
   const m = viewer.mirror;
   return {
+    mode: activeMode,
     reference: {
       pos: r.position.toArray().map(v => +v.toFixed(3)),
       rot: [r.rotation.x, r.rotation.y, r.rotation.z]
@@ -406,6 +407,16 @@ function applyState(s) {
 
   // Viewport CSS transform
   viewTransform.setState(s.view);
+
+  // Mode + segmented control. Without this, an undo that un-enables the
+  // mirror would leave the Miroir button highlighted with no mirror visible
+  // and gestures silently moving the hidden disc.
+  if (s.mode && s.mode !== activeMode) {
+    activeMode = s.mode;
+    document.querySelectorAll('.seg').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === s.mode);
+    });
+  }
 }
 
 function refreshUiFromState() {
