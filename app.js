@@ -225,6 +225,29 @@ async function openEditorWithSample(sample) {
   viewTransform?.reset();
 
   photoImg.src = sample.photo;
+
+  // Resolve focale and apply it BEFORE loading the STL, so the auto-frame
+  // inside loadReferenceSTL (the no-startPose path) uses the correct
+  // camera FOV. Otherwise the auto-frame uses whichever FOV the previous
+  // sample left on the camera, and the next sample's mesh ends up at the
+  // wrong apparent size.
+  //
+  // Resolution order: manifest.focale > EXIF > 26 mm (iPhone wide).
+  // compensate: false — for samples with a calibrated startPose the pose
+  // was captured at this focale; for samples without, there's no prior
+  // mesh position to compensate from.
+  //
+  // We pass the underlying File over the blob: URL for EXIF reading —
+  // exifr's URL-string parser is flaky on blob: URLs in some browsers,
+  // but it reads a File or Blob reliably.
+  const exif = await readFovFromFile(sample.photoFile ?? sample.photo);
+  let focaleMm = 26;
+  if (typeof sample.focale === 'number') focaleMm = sample.focale;
+  else if (exif?.focaleMm)               focaleMm = exif.focaleMm;
+  focaleMm = Math.round(focaleMm);
+  viewer.setFov(focaleToFov(focaleMm), { compensate: false });
+  setFocaleDisplay(focaleMm);
+
   await viewer.loadReferenceSTL(sample.reference, { startPose: sample.startPose });
 
   // Per-sample mirror config. Absent → mirror stays off until the user taps
@@ -242,17 +265,6 @@ async function openEditorWithSample(sample) {
     viewer.mirror.setEnabled(false);
   }
 
-  // Focale resolution order: manifest.focale > EXIF > 26 mm (iPhone wide).
-  // setFov runs with compensate: false because the calibrated startPose
-  // was captured at this focale — we just need to set the camera, not
-  // shift the mesh.
-  const exif = await readFovFromFile(sample.photo);
-  let focaleMm = 26;
-  if (typeof sample.focale === 'number') focaleMm = sample.focale;
-  else if (exif?.focaleMm)               focaleMm = exif.focaleMm;
-  focaleMm = Math.round(focaleMm);
-  viewer.setFov(focaleToFov(focaleMm), { compensate: false });
-  setFocaleDisplay(focaleMm);
   syncSecondaryBarToMode();
 
   // Fresh undo history per sample — undo doesn't cross sample boundaries.
@@ -302,9 +314,12 @@ const btnOwn = document.getElementById('btn-own');
 const stlChoiceEl = document.getElementById('stl-choice');
 let ownPickPhotoUrl = null;
 
+let ownPickPhotoFile = null;
+
 function pickOwnPhoto() {
-  promptForFile('image/jpeg,image/png', (url) => {
+  promptForFile('image/jpeg,image/png', (url, file) => {
     ownPickPhotoUrl = url;
+    ownPickPhotoFile = file;
     showStlChoice();
   });
 }
@@ -324,12 +339,15 @@ function hideStlChoice() {
 function chooseStl(source) {
   const finish = (stlUrl) => {
     const photoUrl = ownPickPhotoUrl;
+    const photoFile = ownPickPhotoFile;
     ownPickPhotoUrl = null; // hand off — don't revoke; editor holds it
+    ownPickPhotoFile = null;
     hideStlChoice();
     openEditorWithSample({
       id: 'custom',
       title: { fr: 'Ma photo', en: 'My photo' },
       photo: photoUrl,
+      photoFile,
       reference: stlUrl,
     });
   };
@@ -343,6 +361,7 @@ function chooseStl(source) {
 function cancelOwnPick() {
   if (ownPickPhotoUrl) URL.revokeObjectURL(ownPickPhotoUrl);
   ownPickPhotoUrl = null;
+  ownPickPhotoFile = null;
   hideStlChoice();
 }
 
@@ -363,7 +382,7 @@ function promptForFile(accept, onFile) {
       console.error('[lct] URL.createObjectURL returned no URL for', f);
       return;
     }
-    onFile(url);
+    onFile(url, f);
   };
   filePicker.click();
 }
