@@ -5,7 +5,7 @@ Each one is a call, not a truth. We are handing this project to a team of
 dental students who will spend a summer using it, finding the rough edges,
 and improving it. **You are encouraged to argue with anything below.**
 
-If you disagree, change the code *and* update this file with the new call
+If you disagree, change the code _and_ update this file with the new call
 and the reason. The doc gets better every time it gets edited.
 
 ---
@@ -20,7 +20,7 @@ app produces measurements; this one produces a visual overlay.
 There will be a temptation to add an "alignment score" or "75% match"
 indicator. **Resist it.** There is no objective ground truth for "correct
 alignment" of a 2D photo to a 3D mesh — a fake number is worse than no
-number. If you find a *real* signal worth surfacing, document it here
+number. If you find a _real_ signal worth surfacing, document it here
 before shipping it.
 
 ### 2. Camera is fixed; only objects move.
@@ -63,7 +63,7 @@ the per-sample manifest can override via `"mirror": { enabled, radius,
 opacity, position, rotation_deg }`. Capture a good mirror pose with
 `lct.dumpMirrorPose()` after dragging it into place. By convention,
 samples ship with `enabled: false` (progressive disclosure — see §9)
-unless the sample is specifically *about* the mirror feature.
+unless the sample is specifically _about_ the mirror feature.
 
 Vue is a CSS transform on `#photo-frame` (`src/view.js`). Pan via
 1-finger drag, pinch-zoom around the touch midpoint, wheel-zoom
@@ -95,6 +95,7 @@ Snapshots are JSON-deduplicated so no-op events don't fill the stack.
 Max depth 50.
 
 "Completed gesture" means:
+
 - pointerup at the end of a drag on the canvas
 - 300 ms wheel idle (one scroll burst = one undo step)
 - 'change' event on a slider (release after drag)
@@ -114,7 +115,7 @@ V1.6 reorganises tunable controls along three surfaces:
   floating popover with the slider. Visible value reassures the user
   what the camera is set to; popover hides the slider until requested.
 - **Secondary bar** above the mode-segmented control hosts the
-  *contextual opacity slider* — its meaning tracks the active mode:
+  _contextual opacity slider_ — its meaning tracks the active mode:
   Référence → reference opacity, Miroir → mirror opacity, Vue → bar
   hidden entirely (no slider needed in view mode).
 - **Settings sheet** behind a gear icon for less-frequent controls
@@ -142,8 +143,8 @@ foreshortening changes. This lets a student vary focale to find what
 matches the photo's perspective without size confusing them.
 
 Initial focale order: `sample.focale` (manifest, mm) → EXIF
-`FocalLengthIn35mmFilm` → fallback 26 mm (iPhone wide). On *initial
-load*, compensation is OFF, because the calibrated `startPose` was
+`FocalLengthIn35mmFilm` → fallback 26 mm (iPhone wide). On _initial
+load_, compensation is OFF, because the calibrated `startPose` was
 captured at the resolved focale already — we just set the camera.
 Compensation is ON only for user-driven slider changes.
 
@@ -203,6 +204,7 @@ iPhone (the default capture format), nothing happens. This is unhelpful
 but cheap to ship.
 
 Options if you want to fix this:
+
 - **Cheap:** show a one-screen modal explaining how to switch iPhone
   capture to JPEG (Réglages → Appareil photo → Formats → Le plus
   compatible).
@@ -267,11 +269,3 @@ suggestion; pick what you want to ship.
 - **Position presets** for "Use my own photo and STL" mode (Vue de
   face / occlusale / latérale), since custom photos don't ship with a
   `startPose`.
-
-## Where this came from
-
-The desktop prototype is `../prep-grade/scripts/align.html` (a sibling
-project). It implements the same core idea (Architecture A,
-mouse-driven, optional mirror disc) for desktop. When in doubt about
-*why* something is the way it is here, that file is the source of
-historical truth.
