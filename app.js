@@ -331,7 +331,15 @@ async function openEditorWithSample(sample) {
     viewer.mirror.setEnabled(false);
   }
 
-  syncSecondaryBarToMode();
+  // If we landed in Mirror mode on the previous sample and this one has
+  // no mirror disc, drop back to View — otherwise the Hide chip would
+  // appear with nothing to hide, and a 1-pointer drag would silently
+  // move the (invisible) mirror group.
+  if (!viewer.mirror.isEnabled() && activeMode === 'mirror') {
+    setActiveMode('view');
+  } else {
+    syncSecondaryBarToMode();
+  }
 
   // Fresh undo history per sample — undo doesn't cross sample boundaries.
   undoStack.reset();

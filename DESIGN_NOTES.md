@@ -248,6 +248,67 @@ different transform, finer decimation), recreate the local
 `scripts/.venv` (`python3 -m venv scripts/.venv && scripts/.venv/bin/pip
 install pymeshlab trimesh numpy`), then run `scripts/prepare_samples.py`.
 
+### 17. Auto-fit "Caler" / "Snap" — silhouette + chamfer to the photo.
+
+V1.9 adds an auto-positioning chip in Reference mode (next to the
+opacity slider). Tapping it runs a Nelder-Mead optimisation of the
+6-DoF reference pose, starting from wherever the user has manually
+placed it, to minimise a chamfer distance between the 3D reference's
+silhouette and the photo's edges.
+
+Pipeline (`src/refine.js`):
+
+1. **Once per photo** — grayscale → Sobel → threshold at 20 % of max
+   gradient → Felzenszwalb-Huttenlocher distance transform. Cached at
+   256-wide working resolution; invalidated on photo change.
+2. **Each cost evaluation** — render the reference's silhouette
+   (white `MeshBasicMaterial`, everything else hidden) into an
+   offscreen `WebGLRenderTarget`; walk 4-neighbour boundary pixels;
+   return mean DT over those pixels. Empty silhouette → ∞ so the
+   optimiser never prefers off-screen poses.
+3. **Optimiser** — Nelder-Mead simplex (α=1, γ=2, ρ=0.5, σ=0.5) over
+   `[tx, ty, tz, rx, ry, rz]`. Initial perturbations 2 mm / ~2.3°.
+   Yields to `requestAnimationFrame` between iterations so the canvas
+   keeps drawing — the model visibly wiggles while the simplex
+   explores. Terminates when both cost-spread and parameter-spread
+   fall below their thresholds, or at 200 iterations.
+
+**FOV is intentionally NOT optimised.** Depth (`tz`) already controls
+apparent size; freeing FOV too would make the two ambiguous to the
+optimiser. The user-set focale is treated as ground truth.
+
+**This does not violate §1.** The chamfer cost is internal — never
+surfaced to the user. Snap either lands a pose that looks right or it
+doesn't; the user judges visually, exactly as they would for a manual
+placement. There is no "75 % match" number anywhere.
+
+**Known fragilities worth surfacing** (none are blockers, all are
+honest about where the heuristic can lose):
+
+- Sobel threshold is a single 20 %-of-max heuristic, so a strong
+  specular highlight on a wet incisor can suppress real anatomy
+  edges across the whole image.
+- There's no region-of-interest mask. Lip lines, gum boundaries, hair,
+  photo borders all contribute to the DT. On a well-framed photo the
+  signal-to-noise is fine; on a busy one the simplex may settle into
+  a wrong local minimum. Undo reverts a bad result.
+- The convergence test mixes mm and rad in a single `paramEps`.
+  Rotation tolerance is effectively ~2.9° at the default setting —
+  fine for "is this pose approximately right," loose for "is this the
+  best possible pose."
+
+**Diagnostic hooks** (see also AGENTS.md § Console helpers):
+
+- `lct.refineDebug()` — opens a bottom sheet showing the photo's DT
+  image alongside the current silhouette boundary in red. Useful for
+  understanding why a Snap landed where it did (or didn't land).
+- `lct.refineCancel()` — aborts a running optimisation from the
+  console. The pose is restored to where it was when Snap started.
+
+**Snap belongs to Reference mode** — there's nothing to align the
+mirror disc against, so its slot in Mirror mode hosts "Cacher" (Hide
+the mirror) instead. See AGENTS.md for the UI layout.
+
 ---
 
 ## V1 → V2 path

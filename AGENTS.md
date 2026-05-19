@@ -123,6 +123,8 @@ lct.dumpMirrorPose()        // current mirror pose + radius + opacity
 lct.setMirrorRadius(8)      // change radius (mm) without UI
 lct.setMirrorOpacity(0.5)   // fade reflection without UI
 lct.resetView()             // restore Vue-mode pan/zoom to identity
+lct.refineDebug()           // open the DT + silhouette overlay for Snap
+lct.refineCancel()          // abort a running Snap optimisation
 lct.viewer                  // raw three.js viewer (camera, scene, mirror, ...)
 ```
 

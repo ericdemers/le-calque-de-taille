@@ -101,6 +101,11 @@ export function createRefiner({ viewer, photoImg }) {
   // Render the reference's silhouette at the current pose. Returns a
   // { data: Uint8Array, width, height } with 1 inside, 0 outside, oriented
   // top-row-first to match the DT image.
+  //
+  // All renderer/scene mutations are hoisted above the try; restores
+  // live in the finally so a thrown render or readPixels can't leave
+  // the scene corrupted (white reference, hidden mirror, wrong camera
+  // aspect, renderer pointed at the offscreen target).
   function renderSilhouette() {
     if (!ensureDT()) return null;
     ensureRenderTarget();
@@ -110,45 +115,46 @@ export function createRefiner({ viewer, photoImg }) {
     viewer.referenceGroup.traverse(o => { if (o.isMesh) mesh = o; });
     if (!mesh) return null;
 
-    // Swap material so the silhouette is unlit pure white regardless of
-    // current opacity / lighting state.
-    const origMat = mesh.material;
-    mesh.material = silhouetteMat;
-
-    // Hide everything in the scene except the reference. Lights stay (no
-    // effect on MeshBasicMaterial).
-    const wasVisible = [];
-    viewer.scene.traverse(o => {
-      if (o.isMesh && o !== mesh && o.visible) {
-        wasVisible.push(o);
-        o.visible = false;
-      }
-    });
-
-    // Save + override renderer state, render, read pixels.
+    // Snapshot every piece of state we are about to mutate, BEFORE the
+    // mutation. finally then restores exactly what we saved.
+    const origMat   = mesh.material;
+    const hidden    = [];
     const prevTarget = viewer.renderer.getRenderTarget();
     const prevColor  = viewer.renderer.getClearColor(new THREE.Color()).clone();
     const prevAlpha  = viewer.renderer.getClearAlpha();
     const prevAspect = viewer.camera.aspect;
-
-    viewer.camera.aspect = dtW / dtH;
-    viewer.camera.updateProjectionMatrix();
-
-    viewer.renderer.setRenderTarget(renderTarget);
-    viewer.renderer.setClearColor(0x000000, 0);
-    viewer.renderer.clear();
-    viewer.renderer.render(viewer.scene, viewer.camera);
-
     const rgba = new Uint8Array(dtW * dtH * 4);
-    viewer.renderer.readRenderTargetPixels(renderTarget, 0, 0, dtW, dtH, rgba);
 
-    // Restore.
-    viewer.renderer.setRenderTarget(prevTarget);
-    viewer.renderer.setClearColor(prevColor, prevAlpha);
-    viewer.camera.aspect = prevAspect;
-    viewer.camera.updateProjectionMatrix();
-    mesh.material = origMat;
-    for (const o of wasVisible) o.visible = true;
+    try {
+      // Swap material so the silhouette is unlit pure white regardless of
+      // current opacity / lighting state.
+      mesh.material = silhouetteMat;
+
+      // Hide everything in the scene except the reference. Lights stay
+      // (MeshBasicMaterial ignores them).
+      viewer.scene.traverse(o => {
+        if (o.isMesh && o !== mesh && o.visible) {
+          hidden.push(o);
+          o.visible = false;
+        }
+      });
+
+      viewer.camera.aspect = dtW / dtH;
+      viewer.camera.updateProjectionMatrix();
+
+      viewer.renderer.setRenderTarget(renderTarget);
+      viewer.renderer.setClearColor(0x000000, 0);
+      viewer.renderer.clear();
+      viewer.renderer.render(viewer.scene, viewer.camera);
+      viewer.renderer.readRenderTargetPixels(renderTarget, 0, 0, dtW, dtH, rgba);
+    } finally {
+      viewer.renderer.setRenderTarget(prevTarget);
+      viewer.renderer.setClearColor(prevColor, prevAlpha);
+      viewer.camera.aspect = prevAspect;
+      viewer.camera.updateProjectionMatrix();
+      mesh.material = origMat;
+      for (const o of hidden) o.visible = true;
+    }
 
     // WebGL pixel order is bottom-up; flip into a top-down 1-channel array.
     const silh = new Uint8Array(dtW * dtH);
