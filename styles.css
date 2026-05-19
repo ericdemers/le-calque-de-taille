@@ -325,6 +325,28 @@ input[type="range"]::-moz-range-thumb {
 }
 .setting-row input[type="range"] { flex: 1; }
 .setting-row .readout { min-width: 56px; text-align: right; }
+
+/* Refine debug sheet — scaffolding visualisation. Canvas is rendered at
+   2× working resolution wide; scale to fit the viewport. */
+.refine-debug-content #refine-debug-canvas-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.refine-debug-content canvas {
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #0a0a0a;
+}
+.refine-debug-hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .chrome.hidden {
   opacity: 0;
   pointer-events: none;

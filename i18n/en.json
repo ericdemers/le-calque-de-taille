@@ -24,6 +24,10 @@
   "aria.sample":         "Sample",
   "aria.settings":       "Settings",
   "aria.close":          "Close",
+  "aria.refine":         "Refine pose",
+
+  "refine.debugTitle":   "Distance + silhouette",
+  "refine.debugHint":    "Left: distance-transform of the photo's edges. Right: the same image with the 3D model's silhouette overlaid in red.",
 
   "ios.installHint": "Install this app: Share → Add to Home Screen"
 }

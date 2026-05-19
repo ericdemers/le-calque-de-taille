@@ -162,7 +162,7 @@ export function createViewer(canvas) {
   })();
 
   return {
-    camera, scene, referenceGroup, mirror,
+    renderer, camera, scene, referenceGroup, mirror,
     loadReferenceSTL, setFov,
     setReferenceOpacity, getReferenceOpacity,
     resetReference, resize,

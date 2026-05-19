@@ -24,6 +24,10 @@
   "aria.sample":         "Exemple",
   "aria.settings":       "Réglages",
   "aria.close":          "Fermer",
+  "aria.refine":         "Affiner la pose",
+
+  "refine.debugTitle":   "Distance + silhouette",
+  "refine.debugHint":    "Gauche : carte de distance des contours de la photo. Droite : la même carte avec la silhouette du modèle 3D superposée en rouge.",
 
   "ios.installHint": "Installer l'appli : Partager → Sur l'écran d'accueil"
 }

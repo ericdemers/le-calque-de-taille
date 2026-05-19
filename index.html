@@ -96,9 +96,41 @@
       <span class="chip-label" data-i18n="control.focale">Focale</span>
       <span class="chip-value" id="focale-value">— mm</span>
     </button>
+    <button id="btn-refine" class="icon-btn" type="button"
+            data-i18n-aria="aria.refine" aria-label="Affiner la pose" disabled>
+      <!-- Concentric-circle "target" mark — hints at "snap to fit". -->
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="5"/>
+        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
     <button id="btn-settings" class="icon-btn" type="button"
             data-i18n-aria="aria.settings" aria-label="Réglages">⚙</button>
   </header>
+
+  <!-- Refine debug overlay (scaffolding phase). Shows the photo's
+       distance-transform image alongside the same image with the current
+       silhouette boundary in red. Tap the backdrop or × to dismiss. -->
+  <div id="refine-debug" class="sheet hidden" role="dialog"
+       aria-labelledby="refine-debug-title">
+    <div class="sheet-content refine-debug-content">
+      <header class="sheet-header">
+        <h3 id="refine-debug-title" data-i18n="refine.debugTitle">
+          Distance + silhouette
+        </h3>
+        <button id="refine-debug-close" class="icon-btn" type="button"
+                data-i18n-aria="aria.close" aria-label="Fermer">×</button>
+      </header>
+      <div id="refine-debug-canvas-wrap"></div>
+      <p class="refine-debug-hint" data-i18n="refine.debugHint">
+        Gauche : carte de distance. Droite : silhouette du modèle 3D
+        superposée, en rouge.
+      </p>
+    </div>
+  </div>
 
   <div id="secondary-bar" class="chrome">
     <label for="opacity-slider" data-i18n="control.opacity">Opacité</label>

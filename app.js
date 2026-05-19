@@ -3,6 +3,7 @@ import { attachGestures } from './src/gestures.js';
 import { createViewTransform } from './src/view.js';
 import { createUndoStack } from './src/undo.js';
 import { readFovFromFile } from './src/exif.js';
+import { createRefiner } from './src/refine.js';
 import * as i18n from './src/i18n.js';
 
 const welcomeEl = document.getElementById('welcome');
@@ -31,6 +32,11 @@ const mirrorRadiusReadout = document.getElementById('mirror-radius-readout');
 
 const btnUndo = document.getElementById('btn-undo');
 
+const btnRefine          = document.getElementById('btn-refine');
+const refineDebugSheet   = document.getElementById('refine-debug');
+const refineDebugClose   = document.getElementById('refine-debug-close');
+const refineDebugWrap    = document.getElementById('refine-debug-canvas-wrap');
+
 // 35 mm-equivalent focal length ↔ vertical FOV (degrees).
 // 35 mm frame is 24 mm tall → half-height 12 mm.
 function focaleToFov(mm)   { return 2 * Math.atan(12 / mm) * 180 / Math.PI; }
@@ -40,6 +46,7 @@ let samples = [];
 let viewer = null;
 let viewTransform = null;
 let undoStack = null;
+let refiner = null;
 let activeMode = 'view'; // 'reference' | 'mirror' | 'view'
 
 async function init() {
@@ -95,6 +102,25 @@ async function init() {
     if (!undoStack?.undo()) return;
     refreshUiFromState();
     updateUndoButton();
+  });
+
+  // Refine button — scaffolding phase. Click renders the photo's
+  // distance-transform image with the current reference silhouette
+  // overlaid in red, so we can see what the (future) chamfer cost
+  // function is looking at before we wire the optimiser.
+  btnRefine.addEventListener('click', () => {
+    if (!refiner) return;
+    const cv = refiner.debugDump();
+    if (!cv) return;
+    refineDebugWrap.innerHTML = '';
+    refineDebugWrap.appendChild(cv);
+    refineDebugSheet.classList.remove('hidden');
+  });
+  refineDebugClose.addEventListener('click', () => {
+    refineDebugSheet.classList.add('hidden');
+  });
+  refineDebugSheet.addEventListener('click', (e) => {
+    if (e.target === refineDebugSheet) refineDebugSheet.classList.add('hidden');
   });
 
   // Settings sheet (gear icon) — currently holds the mirror-radius slider.
@@ -186,6 +212,15 @@ async function openEditorWithSample(sample) {
     });
     window.addEventListener('resize', fitFrameToPhoto);
     photoImg.addEventListener('load', fitFrameToPhoto);
+
+    // Auto-refine pose against the photo's edge map. The DT image is
+    // photo-specific, so invalidate it on every photo change and re-enable
+    // the Refine button once a fresh photo has loaded.
+    refiner = createRefiner({ viewer, photoImg });
+    photoImg.addEventListener('load', () => {
+      refiner.invalidate();
+      btnRefine.disabled = false;
+    });
 
     // Dev hooks for the JS console. Used to capture good defaults for the
     // sample manifest and to dial radius/opacity on a phone before we
