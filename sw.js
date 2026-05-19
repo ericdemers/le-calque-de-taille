@@ -27,6 +27,7 @@ const APP_SHELL = [
   './src/undo.js',
   './src/exif.js',
   './src/i18n.js',
+  './src/refine.js',
   './i18n/fr.json',
   './i18n/en.json',
   './samples/manifest.json',
