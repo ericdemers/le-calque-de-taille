@@ -284,7 +284,11 @@ export function createRefiner({ viewer, photoImg }) {
       x0, steps, fn,
       maxIters,
       costEps: 0.005,        // sub-pixel mean DT improvement → stop
-      paramEps: 0.05,        // simplex shrunk below ~0.05 mm / 0.05 rad
+      // Per-axis convergence tolerance. Translation is in mm, rotation
+      // in rad — mixing them in one scalar let the rotation simplex
+      // stay at ~0.05 rad (≈2.9°) while we still declared victory.
+      // 0.05 mm / 0.005 rad (≈0.29°) keeps both physically tight.
+      paramEps: [0.05, 0.05, 0.05, 0.005, 0.005, 0.005],
       onIter: async ({ iter, bestCost }) => {
         onProgress?.({ iter, bestCost });
         await yieldToFrame();
@@ -329,6 +333,12 @@ async function nelderMead({
   const n = x0.length;
   const ALPHA = 1, GAMMA = 2, RHO = 0.5, SIGMA = 0.5;
 
+  // Coerce a scalar paramEps into a per-axis array so the convergence
+  // test can use the same code path either way.
+  const paramEpsArr = (typeof paramEps === 'number')
+    ? new Array(n).fill(paramEps)
+    : paramEps;
+
   // Initial simplex: x0 + each axis perturbed by its step.
   const simplex = [x0.slice()];
   for (let i = 0; i < n; i++) {
@@ -346,18 +356,20 @@ async function nelderMead({
     const sortedC = order.map(i => costs[i]);
     for (let i = 0; i <= n; i++) { simplex[i] = sortedS[i]; costs[i] = sortedC[i]; }
 
-    // Convergence: both cost and simplex shrunk below thresholds.
+    // Convergence: cost spread tight AND every dimension's simplex
+    // spread under its own tolerance (mm-tolerance for translation
+    // axes, rad-tolerance for rotation axes).
     const costSpread = costs[n] - costs[0];
-    let paramSpread = 0;
+    let paramConverged = true;
     for (let j = 0; j < n; j++) {
       let lo = simplex[0][j], hi = simplex[0][j];
       for (let i = 1; i <= n; i++) {
         if (simplex[i][j] < lo) lo = simplex[i][j];
         if (simplex[i][j] > hi) hi = simplex[i][j];
       }
-      if (hi - lo > paramSpread) paramSpread = hi - lo;
+      if ((hi - lo) >= paramEpsArr[j]) { paramConverged = false; break; }
     }
-    if (costSpread < costEps && paramSpread < paramEps) break;
+    if (costSpread < costEps && paramConverged) break;
 
     // Centroid of all but the worst.
     const centroid = new Array(n).fill(0);
