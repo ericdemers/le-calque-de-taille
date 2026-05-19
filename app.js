@@ -32,7 +32,8 @@ const mirrorRadiusReadout = document.getElementById('mirror-radius-readout');
 
 const btnUndo = document.getElementById('btn-undo');
 
-const btnRefine          = document.getElementById('btn-refine');
+const btnSnap            = document.getElementById('btn-snap');
+const btnHideMirror      = document.getElementById('btn-hide-mirror');
 const refineDebugSheet   = document.getElementById('refine-debug');
 const refineDebugClose   = document.getElementById('refine-debug-close');
 const refineDebugWrap    = document.getElementById('refine-debug-canvas-wrap');
@@ -104,28 +105,38 @@ async function init() {
     updateUndoButton();
   });
 
-  // Refine button — runs the silhouette/chamfer optimiser starting at
-  // the user's current pose. The button disables while the simplex is
-  // running (the model visibly wiggles as the optimiser explores) and
-  // we take an undo snapshot on completion so a bad fit can be reverted.
-  // For diagnosis, the DT+silhouette debug overlay is reachable from the
-  // console via lct.refineDebug().
-  btnRefine.addEventListener('click', async () => {
-    if (!refiner || btnRefine.disabled) return;
-    btnRefine.disabled = true;
-    btnRefine.classList.add('refining');
+  // Snap chip (Reference mode only) — runs the silhouette/chamfer
+  // optimiser starting at the user's current pose. The chip disables
+  // while the simplex is running (the model visibly wiggles as the
+  // optimiser explores); we take an undo snapshot on completion so a
+  // bad fit can be reverted. For diagnosis, the DT+silhouette debug
+  // overlay is reachable from the console via lct.refineDebug().
+  btnSnap.addEventListener('click', async () => {
+    if (!refiner || btnSnap.disabled) return;
+    btnSnap.disabled = true;
+    btnSnap.classList.add('refining');
     try {
       const result = await refiner.refine();
       if (result && !result.cancelled) {
         takeSnapshot();
-        console.log(`[lct] refine: cost=${result.cost?.toFixed(3)} after ${result.iters} iters`);
+        console.log(`[lct] snap: cost=${result.cost?.toFixed(3)} after ${result.iters} iters`);
       }
     } catch (err) {
-      console.error('[lct] refine failed:', err);
+      console.error('[lct] snap failed:', err);
     } finally {
-      btnRefine.classList.remove('refining');
-      btnRefine.disabled = false;
+      btnSnap.classList.remove('refining');
+      btnSnap.disabled = false;
     }
+  });
+
+  // Hide chip (Mirror mode only) — removes the mirror disc and pops the
+  // segmented control back to View. The mirror tab itself stays available
+  // to lazy-re-enable later; an undo also brings it back.
+  btnHideMirror.addEventListener('click', () => {
+    if (!viewer || !viewer.mirror.isEnabled()) return;
+    viewer.mirror.setEnabled(false);
+    setActiveMode('view');
+    takeSnapshot();
   });
   refineDebugClose.addEventListener('click', () => {
     refineDebugSheet.classList.add('hidden');
@@ -160,10 +171,7 @@ async function init() {
         viewer.mirror.setEnabled(true);
         stateChanged = true;
       }
-      activeMode = mode;
-      document.querySelectorAll('.seg').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      syncSecondaryBarToMode();
+      setActiveMode(mode);
       if (stateChanged) takeSnapshot();
     });
   });
@@ -224,13 +232,13 @@ async function openEditorWithSample(sample) {
     window.addEventListener('resize', fitFrameToPhoto);
     photoImg.addEventListener('load', fitFrameToPhoto);
 
-    // Auto-refine pose against the photo's edge map. The DT image is
+    // Auto-fit pose against the photo's edge map. The DT image is
     // photo-specific, so invalidate it on every photo change and re-enable
-    // the Refine button once a fresh photo has loaded.
+    // the Snap chip once a fresh photo has loaded.
     refiner = createRefiner({ viewer, photoImg });
     photoImg.addEventListener('load', () => {
       refiner.invalidate();
-      btnRefine.disabled = false;
+      btnSnap.disabled = false;
     });
 
     // Dev hooks for the JS console. Used to capture good defaults for the
@@ -453,6 +461,18 @@ function backToWelcome() {
   cancelOwnPick();
 }
 
+// Centralised "switch which mode is active" — used by the segmented
+// control AND by the Hide-mirror chip (which also pops back to View).
+// Keeps activeMode, the segmented-control highlight, and the secondary
+// bar's mode-contextual chips in sync.
+function setActiveMode(mode) {
+  activeMode = mode;
+  document.querySelectorAll('.seg').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  syncSecondaryBarToMode();
+}
+
 // Show the right slider in the secondary bar for the active mode.
 // View mode → hide the bar entirely (gestures handle zoom; no slider needed).
 function syncSecondaryBarToMode() {
@@ -468,6 +488,10 @@ function syncSecondaryBarToMode() {
   const pct = Math.round(o * 100);
   opacitySlider.value = pct;
   opacityReadout.textContent = `${pct} %`;
+  // Reference mode → Snap chip; Mirror mode → Hide chip. The other one
+  // hides via .mode-hidden.
+  btnSnap.classList.toggle('mode-hidden',       activeMode !== 'reference');
+  btnHideMirror.classList.toggle('mode-hidden', activeMode !== 'mirror');
 }
 
 function setFocaleDisplay(mm) {

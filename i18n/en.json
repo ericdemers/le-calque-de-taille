@@ -17,6 +17,8 @@
   "control.focale":      "Focal length",
   "control.opacity":     "Opacity",
   "control.undo":        "Undo",
+  "control.snap":        "Snap",
+  "control.hideMirror":  "Hide",
   "settings.title":      "Settings",
   "settings.mirrorRadius": "Mirror size",
 
@@ -24,7 +26,8 @@
   "aria.sample":         "Sample",
   "aria.settings":       "Settings",
   "aria.close":          "Close",
-  "aria.refine":         "Refine pose",
+  "aria.snap":           "Snap the 3D pose to the photo",
+  "aria.hideMirror":     "Hide the mirror",
 
   "refine.debugTitle":   "Distance + silhouette",
   "refine.debugHint":    "Left: distance-transform of the photo's edges. Right: the same image with the 3D model's silhouette overlaid in red.",

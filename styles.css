@@ -348,18 +348,27 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1.5;
 }
 
-/* Refine button — pulse the icon while the optimiser runs so the user
-   sees the button is "busy" even though they can't click again. */
-#btn-refine.refining svg {
+/* Mode-contextual action chip (Caler in Reference, Cacher in Mirror).
+   Lives in the secondary bar, sized to match the slider's height. */
+.action-chip {
+  padding: 4px 10px !important;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.action-chip.mode-hidden { display: none !important; }
+.action-chip svg { display: block; flex-shrink: 0; }
+
+/* Snap chip — pulse the target icon while the optimiser runs so the
+   user sees the chip is "busy" even though they can't click again. */
+#btn-snap.refining svg {
   animation: refine-pulse 0.9s ease-in-out infinite;
 }
 @keyframes refine-pulse {
   0%, 100% { opacity: 0.4; transform: scale(0.92); }
   50%      { opacity: 1.0; transform: scale(1.05); }
 }
-/* The disabled style would normally dim it; while refining we want the
-   pulse instead of the dim. */
-#btn-refine.refining { opacity: 1 !important; }
+#btn-snap.refining { opacity: 1 !important; }
 .chrome.hidden {
   opacity: 0;
   pointer-events: none;

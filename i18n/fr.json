@@ -17,6 +17,8 @@
   "control.focale":      "Focale",
   "control.opacity":     "Opacité",
   "control.undo":        "Annuler",
+  "control.snap":        "Caler",
+  "control.hideMirror":  "Cacher",
   "settings.title":      "Réglages",
   "settings.mirrorRadius": "Taille du miroir",
 
@@ -24,7 +26,8 @@
   "aria.sample":         "Exemple",
   "aria.settings":       "Réglages",
   "aria.close":          "Fermer",
-  "aria.refine":         "Affiner la pose",
+  "aria.snap":           "Caler la pose 3D sur la photo",
+  "aria.hideMirror":     "Cacher le miroir",
 
   "refine.debugTitle":   "Distance + silhouette",
   "refine.debugHint":    "Gauche : carte de distance des contours de la photo. Droite : la même carte avec la silhouette du modèle 3D superposée en rouge.",
