@@ -40,7 +40,7 @@ let samples = [];
 let viewer = null;
 let viewTransform = null;
 let undoStack = null;
-let activeMode = 'reference'; // 'reference' | 'mirror' | 'view'
+let activeMode = 'view'; // 'reference' | 'mirror' | 'view'
 
 async function init() {
   await i18n.init();
