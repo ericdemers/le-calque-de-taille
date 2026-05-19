@@ -104,17 +104,28 @@ async function init() {
     updateUndoButton();
   });
 
-  // Refine button — scaffolding phase. Click renders the photo's
-  // distance-transform image with the current reference silhouette
-  // overlaid in red, so we can see what the (future) chamfer cost
-  // function is looking at before we wire the optimiser.
-  btnRefine.addEventListener('click', () => {
-    if (!refiner) return;
-    const cv = refiner.debugDump();
-    if (!cv) return;
-    refineDebugWrap.innerHTML = '';
-    refineDebugWrap.appendChild(cv);
-    refineDebugSheet.classList.remove('hidden');
+  // Refine button — runs the silhouette/chamfer optimiser starting at
+  // the user's current pose. The button disables while the simplex is
+  // running (the model visibly wiggles as the optimiser explores) and
+  // we take an undo snapshot on completion so a bad fit can be reverted.
+  // For diagnosis, the DT+silhouette debug overlay is reachable from the
+  // console via lct.refineDebug().
+  btnRefine.addEventListener('click', async () => {
+    if (!refiner || btnRefine.disabled) return;
+    btnRefine.disabled = true;
+    btnRefine.classList.add('refining');
+    try {
+      const result = await refiner.refine();
+      if (result && !result.cancelled) {
+        takeSnapshot();
+        console.log(`[lct] refine: cost=${result.cost?.toFixed(3)} after ${result.iters} iters`);
+      }
+    } catch (err) {
+      console.error('[lct] refine failed:', err);
+    } finally {
+      btnRefine.classList.remove('refining');
+      btnRefine.disabled = false;
+    }
   });
   refineDebugClose.addEventListener('click', () => {
     refineDebugSheet.classList.add('hidden');
@@ -245,6 +256,18 @@ async function openEditorWithSample(sample) {
       setMirrorOpacity: (v01) => viewer.mirror.setOpacity(v01),
       viewTransform,
       resetView: () => viewTransform.reset(),
+      // lct.refineDebug() → opens the sheet showing the photo DT image
+      // alongside the current silhouette boundary in red. Diagnostic
+      // tool for understanding why a refine landed (or didn't).
+      refineDebug() {
+        if (!refiner) return;
+        const cv = refiner.debugDump();
+        if (!cv) return;
+        refineDebugWrap.innerHTML = '';
+        refineDebugWrap.appendChild(cv);
+        refineDebugSheet.classList.remove('hidden');
+      },
+      refineCancel: () => refiner?.cancel(),
     };
   }
 

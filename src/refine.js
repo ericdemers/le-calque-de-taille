@@ -214,7 +214,196 @@ export function createRefiner({ viewer, photoImg }) {
     return cv;
   }
 
-  return { invalidate, ensureDT, renderSilhouette, debugDump };
+  // ---- step 3: cost + optimiser ----------------------------------------
+
+  // Chamfer cost: render the silhouette, walk its 4-neighbourhood
+  // boundary, return the mean DT value over those boundary pixels.
+  // A pose whose silhouette lies on photo edges scores near zero;
+  // one whose silhouette is in empty space scores high. Mean (not
+  // sum) so smaller silhouettes don't get a free discount.
+  function cost() {
+    const silh = renderSilhouette();
+    if (!silh) return Infinity;
+    const s = silh.data;
+    let sum = 0, count = 0;
+    for (let y = 1; y < dtH - 1; y++) {
+      for (let x = 1; x < dtW - 1; x++) {
+        const i = y * dtW + x;
+        if (s[i] && (!s[i-1] || !s[i+1] || !s[i-dtW] || !s[i+dtW])) {
+          sum += dt[i];
+          count++;
+        }
+      }
+    }
+    // Empty / off-screen silhouette → cost infinity so the optimiser
+    // never prefers it.
+    return count === 0 ? Infinity : sum / count;
+  }
+
+  function readParams() {
+    const r = viewer.referenceGroup;
+    return [
+      r.position.x, r.position.y, r.position.z,
+      r.rotation.x, r.rotation.y, r.rotation.z,
+    ];
+  }
+
+  function applyParams(p) {
+    viewer.referenceGroup.position.set(p[0], p[1], p[2]);
+    viewer.referenceGroup.rotation.set(p[3], p[4], p[5], 'XYZ');
+  }
+
+  // Run a Nelder-Mead simplex over 6 DoF (position mm, rotation rad)
+  // starting at the current pose. Yields to the browser via rAF
+  // between iterations so the canvas keeps animating (the model
+  // visibly wiggles as the simplex explores) and the UI stays alive.
+  // FOV is intentionally NOT optimised — depth (tz) already covers
+  // apparent size, and freeing both makes them ambiguous.
+  let cancelToken = null;
+
+  async function refine({ maxIters = 200, onProgress } = {}) {
+    if (!ensureDT()) return null;
+    cancelToken = { cancelled: false };
+    const token = cancelToken;
+
+    const x0 = readParams();
+    // Initial simplex perturbations: 2 mm for translation, ~2.3° for
+    // rotation. Nelder-Mead will expand / contract as needed.
+    const steps = [2.0, 2.0, 2.0, 0.04, 0.04, 0.04];
+
+    const fn = (p) => { applyParams(p); return cost(); };
+    const yieldToFrame = () => new Promise(r => requestAnimationFrame(r));
+
+    const result = await nelderMead({
+      x0, steps, fn,
+      maxIters,
+      costEps: 0.005,        // sub-pixel mean DT improvement → stop
+      paramEps: 0.05,        // simplex shrunk below ~0.05 mm / 0.05 rad
+      onIter: async ({ iter, bestCost }) => {
+        onProgress?.({ iter, bestCost });
+        await yieldToFrame();
+        if (token.cancelled) return { stop: true };
+      },
+    });
+
+    if (token.cancelled) {
+      // Caller asked us to stop — restore the user's original pose.
+      applyParams(x0);
+      cancelToken = null;
+      return { cancelled: true };
+    }
+
+    applyParams(result.x);
+    cancelToken = null;
+    return { x: result.x, cost: result.cost, iters: result.iters };
+  }
+
+  function cancel() {
+    if (cancelToken) cancelToken.cancelled = true;
+  }
+
+  return {
+    invalidate, ensureDT, renderSilhouette, debugDump,
+    cost, refine, cancel,
+  };
+}
+
+// ---- Nelder-Mead simplex (Nelder & Mead, 1965) ----------------------------
+// Async because the caller wants to yield to the browser between iterations
+// (the cost function renders to a WebGL target and we want the canvas to
+// keep updating). Standard parameters: α=1, γ=2, ρ=0.5, σ=0.5.
+
+async function nelderMead({
+  x0, steps, fn,
+  maxIters = 200,
+  costEps = 1e-4,
+  paramEps = 1e-4,
+  onIter,
+}) {
+  const n = x0.length;
+  const ALPHA = 1, GAMMA = 2, RHO = 0.5, SIGMA = 0.5;
+
+  // Initial simplex: x0 + each axis perturbed by its step.
+  const simplex = [x0.slice()];
+  for (let i = 0; i < n; i++) {
+    const v = x0.slice();
+    v[i] += steps[i];
+    simplex.push(v);
+  }
+  let costs = simplex.map(p => fn(p));
+
+  let iter = 0;
+  for (; iter < maxIters; iter++) {
+    // Sort vertices best → worst.
+    const order = costs.map((_, i) => i).sort((a, b) => costs[a] - costs[b]);
+    const sortedS = order.map(i => simplex[i]);
+    const sortedC = order.map(i => costs[i]);
+    for (let i = 0; i <= n; i++) { simplex[i] = sortedS[i]; costs[i] = sortedC[i]; }
+
+    // Convergence: both cost and simplex shrunk below thresholds.
+    const costSpread = costs[n] - costs[0];
+    let paramSpread = 0;
+    for (let j = 0; j < n; j++) {
+      let lo = simplex[0][j], hi = simplex[0][j];
+      for (let i = 1; i <= n; i++) {
+        if (simplex[i][j] < lo) lo = simplex[i][j];
+        if (simplex[i][j] > hi) hi = simplex[i][j];
+      }
+      if (hi - lo > paramSpread) paramSpread = hi - lo;
+    }
+    if (costSpread < costEps && paramSpread < paramEps) break;
+
+    // Centroid of all but the worst.
+    const centroid = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) centroid[j] += simplex[i][j];
+    }
+    for (let j = 0; j < n; j++) centroid[j] /= n;
+
+    const worst = simplex[n], fWorst = costs[n];
+    const fSecondWorst = costs[n - 1];
+    const fBest = costs[0];
+
+    // Reflection.
+    const reflected = centroid.map((c, j) => c + ALPHA * (c - worst[j]));
+    const fR = fn(reflected);
+
+    if (fR >= fBest && fR < fSecondWorst) {
+      simplex[n] = reflected; costs[n] = fR;
+    } else if (fR < fBest) {
+      // Expansion.
+      const expanded = centroid.map((c, j) => c + GAMMA * (reflected[j] - c));
+      const fE = fn(expanded);
+      if (fE < fR) { simplex[n] = expanded; costs[n] = fE; }
+      else         { simplex[n] = reflected; costs[n] = fR; }
+    } else {
+      // Contraction — outside if reflection is better than worst,
+      // inside otherwise.
+      const useOutside = fR < fWorst;
+      const target = useOutside ? reflected : worst;
+      const contracted = centroid.map((c, j) => c + RHO * (target[j] - c));
+      const fC = fn(contracted);
+      const accept = useOutside ? (fC <= fR) : (fC < fWorst);
+      if (accept) {
+        simplex[n] = contracted; costs[n] = fC;
+      } else {
+        // Shrink toward best.
+        const best = simplex[0];
+        for (let i = 1; i <= n; i++) {
+          simplex[i] = best.map((b, j) => b + SIGMA * (simplex[i][j] - b));
+          costs[i] = fn(simplex[i]);
+        }
+      }
+    }
+
+    if (onIter) {
+      const r = await onIter({ iter, bestCost: Math.min(...costs) });
+      if (r?.stop) break;
+    }
+  }
+
+  const order = costs.map((_, i) => i).sort((a, b) => costs[a] - costs[b]);
+  return { x: simplex[order[0]], cost: costs[order[0]], iters: iter };
 }
 
 // ---- Felzenszwalb–Huttenlocher exact L2 distance transform ----------------
