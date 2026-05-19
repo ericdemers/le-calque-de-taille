@@ -124,8 +124,9 @@ export function attachGestures({
         obj.position.addScaledVector(camUp,   -(mid.y - lastTwoMid.y) * PAN_SENS_MM_PER_PX);
       }
       if (lastTwoDist != null) {
-        // Pinch out (distance grows) → push the object FURTHER from camera
-        // (camForward points away from camera, so negative deltaY style).
+        // Pinch out (distance grows) → pull the object TOWARD the camera
+        // (camFwd points away from camera; the negation flips that to
+        // toward-camera, so the object grows — standard pinch convention).
         const dd = dist - lastTwoDist;
         obj.position.addScaledVector(camFwd, -dd * PUSH_SENS_MM_PER_PINCH);
       }
@@ -151,11 +152,14 @@ export function attachGestures({
       const ratio = Math.pow(WHEEL_ZOOM_EXP_BASE, e.deltaY);
       viewTransform.scaleBy(ratio, e.clientX, e.clientY);
     } else {
+      // Match the View-mode wheel convention: wheel up = zoom in.
+      // camFwd points away from the camera; +deltaY pushes the object
+      // further out (smaller), -deltaY pulls it closer (larger).
       const obj = getActiveObject();
       if (!obj) return;
       const camFwd = new THREE.Vector3();
       camera.getWorldDirection(camFwd);
-      obj.position.addScaledVector(camFwd, -e.deltaY * PUSH_SENS_MM_PER_WHEEL);
+      obj.position.addScaledVector(camFwd, e.deltaY * PUSH_SENS_MM_PER_WHEEL);
     }
     // Wheel events stream continuously — debounce the snapshot so one
     // "session" of scrolling becomes one undo step.
