@@ -27,8 +27,8 @@ const focaleReadout = document.getElementById('focale-readout');
 const btnSettings   = document.getElementById('btn-settings');
 const settingsSheet = document.getElementById('settings-sheet');
 const settingsClose = document.getElementById('settings-close');
-const mirrorRadiusSlider  = document.getElementById('mirror-radius-slider');
-const mirrorRadiusReadout = document.getElementById('mirror-radius-readout');
+const mirrorDiameterSlider  = document.getElementById('mirror-diameter-slider');
+const mirrorDiameterReadout = document.getElementById('mirror-diameter-readout');
 
 const btnUndo = document.getElementById('btn-undo');
 
@@ -96,7 +96,7 @@ async function init() {
   });
   opacitySlider.addEventListener('change', () => takeSnapshot());
   focaleSlider.addEventListener('change', () => takeSnapshot());
-  mirrorRadiusSlider.addEventListener('change', () => takeSnapshot());
+  mirrorDiameterSlider.addEventListener('change', () => takeSnapshot());
 
   // Undo button.
   btnUndo.addEventListener('click', () => {
@@ -145,16 +145,19 @@ async function init() {
     if (e.target === refineDebugSheet) refineDebugSheet.classList.add('hidden');
   });
 
-  // Settings sheet (gear icon) — currently holds the mirror-radius slider.
+  // Settings sheet (gear icon) — currently holds the mirror-diameter slider.
   btnSettings.addEventListener('click', () => openSettingsSheet());
   settingsClose.addEventListener('click', () => closeSettingsSheet());
   settingsSheet.addEventListener('click', (e) => {
     if (e.target === settingsSheet) closeSettingsSheet();
   });
-  mirrorRadiusSlider.addEventListener('input', () => {
-    const mm = parseInt(mirrorRadiusSlider.value, 10);
-    mirrorRadiusReadout.textContent = `${mm} mm`;
-    if (viewer) viewer.mirror.setRadius(mm);
+  // Slider stores diameter (matching dental-mirror convention where mirror
+  // #4 = 22 mm, #5 = 24 mm, etc.); the mirror API takes radius, so halve
+  // at the UI boundary.
+  mirrorDiameterSlider.addEventListener('input', () => {
+    const mm = parseInt(mirrorDiameterSlider.value, 10);
+    mirrorDiameterReadout.textContent = `${mm} mm`;
+    if (viewer) viewer.mirror.setRadius(mm / 2);
   });
 
   // Mode segmented control.
@@ -510,10 +513,11 @@ function setFocaleDisplay(mm) {
 
 function openSettingsSheet() {
   if (!viewer) return;
-  // Reflect current values when opening.
-  const r = viewer.mirror.getRadius();
-  mirrorRadiusSlider.value = r;
-  mirrorRadiusReadout.textContent = `${r} mm`;
+  // Reflect current values when opening. Mirror API speaks radius; the
+  // slider speaks diameter (the value a dentist orders a mirror by).
+  const d = viewer.mirror.getRadius() * 2;
+  mirrorDiameterSlider.value = d;
+  mirrorDiameterReadout.textContent = `${d} mm`;
   settingsSheet.classList.remove('hidden');
 }
 function closeSettingsSheet() {

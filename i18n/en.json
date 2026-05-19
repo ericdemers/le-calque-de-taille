@@ -20,7 +20,7 @@
   "control.snap":        "Snap",
   "control.hideMirror":  "Hide",
   "settings.title":      "Settings",
-  "settings.mirrorRadius": "Mirror size",
+  "settings.mirrorDiameter": "Mirror diameter",
 
   "aria.back":           "Back",
   "aria.sample":         "Sample",

@@ -20,7 +20,7 @@
   "control.snap":        "Caler",
   "control.hideMirror":  "Cacher",
   "settings.title":      "Réglages",
-  "settings.mirrorRadius": "Taille du miroir",
+  "settings.mirrorDiameter": "Diamètre du miroir",
 
   "aria.back":           "Retour",
   "aria.sample":         "Exemple",
